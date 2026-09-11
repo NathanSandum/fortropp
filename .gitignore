@@ -1,0 +1,4 @@
+infra/.env
+.git-remotes/
+.claude/
+.DS_Store
