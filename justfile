@@ -1,7 +1,7 @@
 mod backend
 mod frontend
 
-dev-up:
+dev-up: dev-down build
 	docker compose -f infra/docker-compose.yml up -d --build
 
 dev-down:
@@ -18,7 +18,7 @@ pretty: backend::pretty frontend::pretty
 
 build: backend::build frontend::build
 
-test-up: frontend::build
+test-up: dev-down frontend::build
 	docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test up -d --build --wait
 
 test-down:

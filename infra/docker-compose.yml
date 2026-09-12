@@ -32,14 +32,16 @@ services:
       PORT: 8080
       S3_ENDPOINT: http://s3:9000
       S3_PUBLIC_ORIGIN: http://localhost:9002
-      S3_BUCKET: fortropp-site-files
+      S3_BUCKET_PREFIX: fortropp-site-files
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-fortropp}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?}
       S3_REGION: us-east-1
+      EXTERNAL_SETTINGS_S3_BUCKET_POLICY: "true"
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
       FRONTEND_ORIGIN: http://localhost
+      COOKIE_SECURE: "false"
     depends_on:
       postgres:
         condition: service_healthy
