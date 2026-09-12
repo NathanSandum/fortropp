@@ -26,6 +26,7 @@ services:
   backend:
     build: ../backend
     environment:
+      RUST_LOG: backend=debug,info
       DATABASE_URL: postgres://fortropp:${POSTGRES_PASSWORD:?}@postgres:5432/fortropp
       REDIS_URL: redis://redis:6379
       PORT: 8080
