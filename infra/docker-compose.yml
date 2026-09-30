@@ -82,6 +82,23 @@ services:
       timeout: 5s
       retries: 5
 
+  dev-worker:
+    build: ../dev-worker
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      - ../dev-worker:/app
+      - dev_worker_cargo:/usr/local/cargo/registry
+      - dev_worker_target:/app/target
+      - dev_worker_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8787/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
   s3-proxy:
     image: caddy:2.11.4
     restart: unless-stopped
@@ -111,3 +128,6 @@ volumes:
   caddy_config:
   postgres_data:
   s3_data:
+  dev_worker_cargo:
+  dev_worker_target:
+  dev_worker_data:

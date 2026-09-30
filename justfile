@@ -10,6 +10,8 @@ dev-down:
 dev-logs:
 	docker compose -f infra/docker-compose.yml logs -f
 
+down: dev-down test-down
+
 check: backend::check frontend::check
 
 lint: backend::lint frontend::lint
@@ -18,7 +20,7 @@ pretty: backend::pretty frontend::pretty
 
 build: backend::build frontend::build
 
-test-up: dev-down frontend::build
+test-up: down frontend::build
 	docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test up -d --build --wait
 
 test-down:
