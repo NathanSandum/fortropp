@@ -26,17 +26,18 @@ services:
   backend:
     build: ../backend
     restart: unless-stopped
+    network_mode: "service:dev-worker"
     environment:
       DATABASE_URL: postgres://fortropp:${POSTGRES_PASSWORD:?}@postgres:5432/fortropp
       REDIS_URL: redis://redis:6379
       PORT: 8080
-      S3_ENDPOINT: http://s3:9000
-      S3_PUBLIC_ORIGIN: http://localhost:9002
-      S3_BUCKET_PREFIX: fortropp-site-files
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-fortropp}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?}
-      S3_REGION: us-east-1
-      EXTERNAL_SETTINGS_S3_BUCKET_POLICY: "true"
+      S3_ENDPOINT: http://localhost:8787/cdn-cgi/local/r2/s3/
+      S3_PUBLIC_ORIGIN: http://localhost:8787/cdn-cgi/local/r2/s3/
+      S3_BUCKET: fortropp-site-files-e2e
+      S3_ACCESS_KEY: fortropp-dev-worker-s3
+      S3_SECRET_KEY: fortropp-dev-worker-s3-secret
+      S3_REGION: auto
+      DEV_WORKER_URL: http://dev-worker:8787
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
@@ -47,7 +48,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      s3:
+      dev-worker:
         condition: service_healthy
       mailpit:
         condition: service_healthy
@@ -64,27 +65,13 @@ services:
       timeout: 5s
       retries: 5
 
-  s3:
-    image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z 
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fortropp}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - s3_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   dev-worker:
     build: ../dev-worker
     restart: unless-stopped
+    environment:
+      WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
       - "8787:8787"
     volumes:
@@ -98,17 +85,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 120s
-
-  s3-proxy:
-    image: caddy:2.11.4
-    restart: unless-stopped
-    ports:
-      - "9002:80"
-    volumes:
-      - ./s3-proxy.Caddyfile:/etc/caddy/Caddyfile
-    depends_on:
-      s3:
-        condition: service_healthy
 
   caddy:
     image: caddy:2.11.4
@@ -127,7 +103,6 @@ volumes:
   caddy_data:
   caddy_config:
   postgres_data:
-  s3_data:
   dev_worker_cargo:
   dev_worker_target:
   dev_worker_data:

@@ -1,5 +1,0 @@
-:80 {
-	reverse_proxy s3:9000 {
-		header_up Host s3:9000
-	}
-}
