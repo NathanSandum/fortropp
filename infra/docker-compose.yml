@@ -43,6 +43,9 @@ services:
       SMTP_FROM: noreply@fortropp.local
       FRONTEND_ORIGIN: http://localhost
       COOKIE_SECURE: "false"
+      DNS_NAMESERVER: pdns:53
+      EDGE_HOSTNAME: edge.fortropp.test
+      DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,6 +55,23 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_healthy
+      pdns:
+        condition: service_healthy
+
+  pdns:
+    image: powerdns/pdns-auth-51:5.1.4
+    restart: unless-stopped
+    environment:
+      PDNS_AUTH_API_KEY: fortropp-dev-pdns
+    ports:
+      - "8082:8081"
+    volumes:
+      - pdns_data:/var/lib/powerdns
+    healthcheck:
+      test: ["CMD", "pdns_control", "rping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mailpit:
     image: axllent/mailpit:v1.24
@@ -106,3 +126,4 @@ volumes:
   dev_worker_cargo:
   dev_worker_target:
   dev_worker_data:
+  pdns_data:
