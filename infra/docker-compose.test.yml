@@ -41,8 +41,8 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
-      FRONTEND_ORIGIN: http://localhost:${CADDY_PORT:?}
-      COOKIE_SECURE: "false"
+      FRONTEND_ORIGIN: https://localhost:${CADDY_PORT:?}
+      COOKIE_SECURE: "true"
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:?}
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
@@ -98,8 +98,15 @@ services:
 
   caddy:
     image: caddy:2.11.4
+    environment:
+      CADDY_SITE_ADDRESS: localhost
     ports:
-      - "${CADDY_PORT:?}:80"
+      - "${CADDY_PORT:?}:443"
+    healthcheck:
+      test: ["CMD", "test", "-f", "/data/caddy/pki/authorities/local/root.crt"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ../frontend/build:/srv

@@ -1,6 +1,15 @@
-localhost:80 {
+{$CADDY_SITE_ADDRESS:localhost:80} {
 	handle /api/* {
 		reverse_proxy dev-worker:8080
+	}
+
+	handle /.well-known/oauth-* {
+		reverse_proxy dev-worker:8080
+	}
+
+	header /oauth/* {
+		Content-Security-Policy "frame-ancestors 'none'"
+		X-Frame-Options "DENY"
 	}
 
 	handle {
