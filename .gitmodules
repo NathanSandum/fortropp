@@ -1,10 +1,10 @@
 [submodule "backend"]
 	path = backend
-	url = ./backend
+	url = ../fortropp-backend.git
 
 [submodule "frontend"]
 	path = frontend
-	url = ./frontend
+	url = ../fortropp-frontend.git
 [submodule "dev-worker"]
 	path = dev-worker
-	url = ./dev-worker
+	url = ../fortropp-dev-worker.git
