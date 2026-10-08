@@ -41,8 +41,8 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
-      FRONTEND_ORIGIN: http://localhost
-      COOKIE_SECURE: "false"
+      FRONTEND_ORIGIN: https://localhost
+      COOKIE_SECURE: "true"
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: edge.fortropp.test
       DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
@@ -94,6 +94,7 @@ services:
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
       - "8787:8787"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ../dev-worker:/app
       - dev_worker_cargo:/usr/local/cargo/registry
@@ -109,8 +110,11 @@ services:
   caddy:
     image: caddy:2.11.4
     restart: unless-stopped
+    environment:
+      CADDY_SITE_ADDRESS: localhost
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ../frontend/build:/srv

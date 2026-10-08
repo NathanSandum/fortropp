@@ -10,6 +10,10 @@ dev-down:
 dev-logs:
 	docker compose -f infra/docker-compose.yml logs -f
 
+dev-ca:
+	docker compose -f infra/docker-compose.yml exec -T caddy cat /data/caddy/pki/authorities/local/root.crt > infra/dev-ca.crt
+	@echo "Wrote infra/dev-ca.crt"
+
 down: dev-down test-down
 
 check: backend::check frontend::check

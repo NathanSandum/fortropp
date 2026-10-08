@@ -2,3 +2,4 @@ infra/.env
 .git-remotes/
 .claude/
 .DS_Store
+infra/dev-ca.crt
