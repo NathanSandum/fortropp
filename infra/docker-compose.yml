@@ -46,6 +46,8 @@ services:
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: edge.fortropp.test
       DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
+      UPLOAD_ORIGIN: http://localhost:8787
+      UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,6 +92,8 @@ services:
     restart: unless-stopped
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
+      UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
+      UPLOAD_ALLOWED_ORIGIN: https://localhost
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:

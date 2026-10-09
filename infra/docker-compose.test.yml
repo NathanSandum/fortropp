@@ -46,6 +46,8 @@ services:
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:?}
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
+      UPLOAD_ORIGIN: http://localhost:${WORKER_PORT:?}
+      UPLOAD_TICKET_KEY: ${UPLOAD_TICKET_KEY:?}
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,6 +87,8 @@ services:
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
       WRANGLER_PORT: ${WORKER_PORT:?}
+      UPLOAD_TICKET_KEY: ${UPLOAD_TICKET_KEY:?}
+      UPLOAD_ALLOWED_ORIGIN: https://localhost:${CADDY_PORT:?}
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
