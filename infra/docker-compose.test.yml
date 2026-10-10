@@ -48,6 +48,7 @@ services:
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
       UPLOAD_ORIGIN: http://localhost:${WORKER_PORT:?}
       UPLOAD_TICKET_KEY: ${UPLOAD_TICKET_KEY:?}
+      PREVIEW_ORIGIN: http://preview.localhost:${WORKER_PORT:?}
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,6 +90,7 @@ services:
       WRANGLER_PORT: ${WORKER_PORT:?}
       UPLOAD_TICKET_KEY: ${UPLOAD_TICKET_KEY:?}
       UPLOAD_ALLOWED_ORIGIN: https://localhost:${CADDY_PORT:?}
+      PREVIEW_DOMAIN: preview.localhost
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
