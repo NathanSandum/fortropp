@@ -1,0 +1,10 @@
+runner:
+  capacity: 1
+  timeout: 15m
+  labels:
+    - "ubuntu-latest:docker://node:22-bookworm"
+cache:
+  enabled: false
+container:
+  network: "container:fortropp-test-dev-worker-1"
+  force_pull: false
