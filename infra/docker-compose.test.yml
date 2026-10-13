@@ -96,6 +96,7 @@ services:
       UPLOAD_ALLOWED_ORIGIN: https://localhost:${CADDY_PORT:?}
       PREVIEW_DOMAIN: preview.localhost
       WORKER_KV_TOKEN: ${WORKER_KV_TOKEN:?}
+      INTERNAL_HOSTS: localhost,dev-worker
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
