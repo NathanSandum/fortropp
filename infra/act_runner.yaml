@@ -6,5 +6,5 @@ runner:
 cache:
   enabled: false
 container:
-  network: "container:fortropp-test-dev-worker-1"
+  network: "container:fortropp-test-worker-1"
   force_pull: false

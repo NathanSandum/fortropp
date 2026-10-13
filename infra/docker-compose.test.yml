@@ -27,8 +27,8 @@ services:
     build:
       context: ../backend
       additional_contexts:
-        site-config: ../dev-worker/site-config
-    network_mode: "service:dev-worker"
+        site-config: ../worker/site-config
+    network_mode: "service:worker"
     environment:
       RUST_LOG: backend=debug,info
       DATABASE_URL: postgres://fortropp:${POSTGRES_PASSWORD:?}@postgres:5432/fortropp
@@ -37,10 +37,10 @@ services:
       S3_ENDPOINT: http://localhost:${WORKER_PORT:?}/cdn-cgi/local/r2/s3/
       S3_PUBLIC_ORIGIN: http://localhost:${WORKER_PORT:?}/cdn-cgi/local/r2/s3/
       S3_BUCKET: ${S3_BUCKET:?}
-      S3_ACCESS_KEY: fortropp-dev-worker-s3
-      S3_SECRET_KEY: fortropp-dev-worker-s3-secret
+      S3_ACCESS_KEY: fortropp-worker-s3
+      S3_SECRET_KEY: fortropp-worker-s3-secret
       S3_REGION: auto
-      DEV_WORKER_URL: http://dev-worker:${WORKER_PORT:?}
+      WORKER_URL: http://worker:${WORKER_PORT:?}
       WORKER_KV_TOKEN: ${WORKER_KV_TOKEN:?}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      dev-worker:
+      worker:
         condition: service_healthy
       mailpit:
         condition: service_healthy
@@ -87,8 +87,8 @@ services:
       timeout: 5s
       retries: 5
 
-  dev-worker:
-    build: ../dev-worker
+  worker:
+    build: ../worker
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
       WRANGLER_PORT: ${WORKER_PORT:?}
@@ -96,7 +96,7 @@ services:
       UPLOAD_ALLOWED_ORIGIN: https://localhost:${CADDY_PORT:?}
       PREVIEW_DOMAIN: preview.localhost
       WORKER_KV_TOKEN: ${WORKER_KV_TOKEN:?}
-      INTERNAL_HOSTS: localhost,dev-worker
+      INTERNAL_HOSTS: localhost,worker
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:

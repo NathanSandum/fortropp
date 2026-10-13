@@ -27,9 +27,9 @@ services:
     build:
       context: ../backend
       additional_contexts:
-        site-config: ../dev-worker/site-config
+        site-config: ../worker/site-config
     restart: unless-stopped
-    network_mode: "service:dev-worker"
+    network_mode: "service:worker"
     environment:
       DATABASE_URL: postgres://fortropp:${POSTGRES_PASSWORD:?}@postgres:5432/fortropp
       REDIS_URL: redis://redis:6379
@@ -37,11 +37,11 @@ services:
       S3_ENDPOINT: http://localhost:8787/cdn-cgi/local/r2/s3/
       S3_PUBLIC_ORIGIN: http://localhost:8787/cdn-cgi/local/r2/s3/
       S3_BUCKET: fortropp-site-files-e2e
-      S3_ACCESS_KEY: fortropp-dev-worker-s3
-      S3_SECRET_KEY: fortropp-dev-worker-s3-secret
+      S3_ACCESS_KEY: fortropp-worker-s3
+      S3_SECRET_KEY: fortropp-worker-s3-secret
       S3_REGION: auto
-      DEV_WORKER_URL: http://dev-worker:8787
-      WORKER_KV_TOKEN: fortropp-dev-worker-kv-token-00000000000
+      WORKER_URL: http://worker:8787
+      WORKER_KV_TOKEN: fortropp-worker-kv-token-00000000000
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      dev-worker:
+      worker:
         condition: service_healthy
       mailpit:
         condition: service_healthy
@@ -92,26 +92,26 @@ services:
       timeout: 5s
       retries: 5
 
-  dev-worker:
-    build: ../dev-worker
+  worker:
+    build: ../worker
     restart: unless-stopped
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
       UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
       UPLOAD_ALLOWED_ORIGIN: https://localhost
       PREVIEW_DOMAIN: preview.localhost
-      WORKER_KV_TOKEN: fortropp-dev-worker-kv-token-00000000000
-      INTERNAL_HOSTS: localhost,dev-worker
+      WORKER_KV_TOKEN: fortropp-worker-kv-token-00000000000
+      INTERNAL_HOSTS: localhost,worker
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
       - "8787:8787"
       - "127.0.0.1:8080:8080"
     volumes:
-      - ../dev-worker:/app
-      - dev_worker_cargo:/usr/local/cargo/registry
-      - dev_worker_target:/app/target
-      - dev_worker_data:/data
+      - ../worker:/app
+      - worker_cargo:/usr/local/cargo/registry
+      - worker_target:/app/target
+      - worker_data:/data
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8787/healthz"]
       interval: 5s
@@ -139,7 +139,7 @@ volumes:
   caddy_data:
   caddy_config:
   postgres_data:
-  dev_worker_cargo:
-  dev_worker_target:
-  dev_worker_data:
+  worker_cargo:
+  worker_target:
+  worker_data:
   pdns_data:
