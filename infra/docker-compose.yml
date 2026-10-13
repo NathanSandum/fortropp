@@ -41,6 +41,7 @@ services:
       S3_SECRET_KEY: fortropp-dev-worker-s3-secret
       S3_REGION: auto
       DEV_WORKER_URL: http://dev-worker:8787
+      WORKER_KV_TOKEN: fortropp-dev-worker-kv-token-00000000000
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: noreply@fortropp.local
@@ -99,6 +100,7 @@ services:
       UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
       UPLOAD_ALLOWED_ORIGIN: https://localhost
       PREVIEW_DOMAIN: preview.localhost
+      WORKER_KV_TOKEN: fortropp-dev-worker-kv-token-00000000000
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
