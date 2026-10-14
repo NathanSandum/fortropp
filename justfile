@@ -1,5 +1,6 @@
 mod backend
 mod frontend
+mod worker
 
 dev-up: dev-down build
 	docker compose -f infra/docker-compose.yml up -d --build
