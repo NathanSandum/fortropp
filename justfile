@@ -17,11 +17,11 @@ dev-ca:
 
 down: dev-down test-down
 
-check: backend::check frontend::check
+check: backend::check frontend::check worker::check
 
-lint: backend::lint frontend::lint
+lint: backend::lint frontend::lint worker::lint
 
-pretty: backend::pretty frontend::pretty
+pretty: backend::pretty frontend::pretty worker::pretty
 
 build: backend::build frontend::build
 
@@ -44,4 +44,4 @@ ci-up:
 ci-down:
 	docker compose -f infra/docker-compose.test.yml -f infra/docker-compose.ci.yml --env-file frontend/.env.test rm -sfv forgejo forgejo-runner
 
-test: test-up backend::test frontend::test test-down
+test: test-up backend::test worker::proofs frontend::test test-down

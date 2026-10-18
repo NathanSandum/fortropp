@@ -50,8 +50,6 @@ services:
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: edge.fortropp.test
       DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
-      UPLOAD_ORIGIN: http://localhost:8787
-      UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
       PREVIEW_ORIGIN: http://preview.localhost:8787
     depends_on:
       postgres:
@@ -97,8 +95,6 @@ services:
     restart: unless-stopped
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
-      UPLOAD_TICKET_KEY: fortropp-dev-upload-ticket-key-000000
-      UPLOAD_ALLOWED_ORIGIN: https://localhost
       PREVIEW_DOMAIN: preview.localhost
       WORKER_KV_TOKEN: fortropp-worker-kv-token-00000000000
       INTERNAL_HOSTS: localhost,worker
