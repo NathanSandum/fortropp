@@ -36,12 +36,12 @@ ci-up:
 	set -euo pipefail
 	compose="docker compose -f infra/docker-compose.test.yml -f infra/docker-compose.ci.yml --env-file frontend/.env.test"
 	set -a; source frontend/.env.test; set +a
-	$compose up -d --wait gitea
-	$compose exec -T -u git gitea gitea admin user create --admin --username "$GITEA_ADMIN_USER" --password "$GITEA_ADMIN_PASSWORD" --email ci@fortropp.test --must-change-password=false || true
-	export GITEA_RUNNER_TOKEN=$($compose exec -T -u git gitea gitea actions generate-runner-token)
-	$compose up -d gitea-runner
+	$compose up -d --wait forgejo
+	$compose exec -T -u git forgejo forgejo admin user create --admin --username "$FORGEJO_ADMIN_USER" --password "$FORGEJO_ADMIN_PASSWORD" --email ci@fortropp.test --must-change-password=false || true
+	export FORGEJO_RUNNER_TOKEN=$($compose exec -T -u git forgejo forgejo actions generate-runner-token)
+	$compose up -d forgejo-runner
 
 ci-down:
-	docker compose -f infra/docker-compose.test.yml -f infra/docker-compose.ci.yml --env-file frontend/.env.test rm -sfv gitea gitea-runner
+	docker compose -f infra/docker-compose.test.yml -f infra/docker-compose.ci.yml --env-file frontend/.env.test rm -sfv forgejo forgejo-runner
 
 test: test-up backend::test frontend::test test-down

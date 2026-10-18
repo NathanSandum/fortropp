@@ -1,31 +1,38 @@
 services:
-  gitea:
-    image: gitea/gitea:1.24
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:15
     environment:
-      GITEA__database__DB_TYPE: sqlite3
-      GITEA__security__INSTALL_LOCK: "true"
-      GITEA__server__ROOT_URL: http://gitea:3000/
-      GITEA__server__HTTP_PORT: "3000"
-      GITEA__actions__ENABLED: "true"
-      GITEA__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__server__ROOT_URL: http://forgejo:3000/
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__actions__ENABLED: "true"
+      FORGEJO__actions__DEFAULT_ACTIONS_URL: https://github.com
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
     ports:
-      - "${GITEA_PORT:?}:3000"
+      - "${FORGEJO_PORT:?}:3000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/healthz"]
       interval: 2s
       timeout: 5s
       retries: 30
 
-  gitea-runner:
-    image: gitea/act_runner:0.2.11
+  forgejo-runner:
+    image: code.forgejo.org/forgejo/runner:13
+    user: "0:0"
     environment:
-      CONFIG_FILE: /config.yaml
-      GITEA_INSTANCE_URL: http://gitea:3000
-      GITEA_RUNNER_REGISTRATION_TOKEN: ${GITEA_RUNNER_TOKEN:-}
-      GITEA_RUNNER_NAME: fortropp-test
+      FORGEJO_RUNNER_TOKEN: ${FORGEJO_RUNNER_TOKEN:-}
+    command:
+      - sh
+      - -c
+      - >-
+        { [ -f .runner ] || forgejo-runner register --no-interactive
+        --instance http://forgejo:3000 --token "$$FORGEJO_RUNNER_TOKEN" --name fortropp-test
+        --labels ubuntu-latest:docker://node:22-bookworm; }
+        && exec forgejo-runner daemon --config /config.yaml
     volumes:
-      - ./act_runner.yaml:/config.yaml:ro
+      - ./forgejo-runner.yaml:/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      gitea:
+      forgejo:
         condition: service_healthy
