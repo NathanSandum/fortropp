@@ -76,6 +76,21 @@ services:
       timeout: 5s
       retries: 5
 
+  echo:
+    image: python:3.15-alpine
+    command: ["python", "/app/echo.py"]
+    volumes:
+      - ./echo:/app
+    networks:
+      default:
+        aliases:
+          - echo.fortropp.test
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
   mailpit:
     image: axllent/mailpit:v1.24
     ports:
