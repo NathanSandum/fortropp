@@ -1,4 +1,9 @@
 infra/.env
+infra/tofu/.env
+infra/tofu/.terraform/
+infra/tofu/*.tfstate
+infra/tofu/*.tfstate.*
+infra/tofu/*.tfplan
 .git-remotes/
 .claude/
 .DS_Store
