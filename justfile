@@ -6,6 +6,21 @@ dev-up: dev-down build
 	docker compose -f infra/docker-compose.yml up -d --build
 	just dev-dns
 
+tofu := "cd infra/tofu && set -a && . ./.env && set +a && tofu"
+
+prod-up:
+	{{tofu}} apply
+
+prod-down:
+	{{tofu}} destroy \
+		-target=digitalocean_project.fortropp \
+		-target=digitalocean_droplet.backend \
+		-target=digitalocean_database_cluster.postgres \
+		-target=digitalocean_firewall.backend \
+		-target=digitalocean_vpc.production \
+		-target=digitalocean_tag.backend \
+		-target=digitalocean_ssh_key.operator
+
 dev_pdns := "http://localhost:8082/api/v1/servers/localhost"
 dev_pdns_key := "fortropp-dev-pdns"
 
