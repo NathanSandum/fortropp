@@ -51,8 +51,8 @@ services:
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:?}
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
-      PREVIEW_ORIGIN: http://preview.localhost:${WORKER_PORT:?}
       USER_CONTENT_DOMAIN: fortropp.test
+      PREVIEW_PORT: ${CADDY_PORT:?}
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,7 +107,7 @@ services:
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
       WRANGLER_PORT: ${WORKER_PORT:?}
-      PREVIEW_DOMAIN: preview.localhost
+      USER_CONTENT_DOMAIN: fortropp.test
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
@@ -123,6 +123,7 @@ services:
     image: caddy:2.11.4
     environment:
       CADDY_SITE_ADDRESS: localhost
+      WORKER_ADDRESS: worker:${WORKER_PORT:?}
     ports:
       - "${CADDY_PORT:?}:443"
     healthcheck:

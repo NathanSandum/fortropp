@@ -4,6 +4,45 @@ mod worker
 
 dev-up: dev-down build
 	docker compose -f infra/docker-compose.yml up -d --build
+	just dev-dns
+
+dev_pdns := "http://localhost:8082/api/v1/servers/localhost"
+dev_pdns_key := "fortropp-dev-pdns"
+
+[private]
+dev-zone zone:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	for _ in $(seq 60); do
+		curl -sf -H "X-API-Key: {{dev_pdns_key}}" "{{dev_pdns}}/zones" >/dev/null && break
+		sleep 1
+	done
+	status=$(curl -s -o /dev/null -w '%{http_code}' -H "X-API-Key: {{dev_pdns_key}}" "{{dev_pdns}}/zones/{{zone}}.")
+	if [[ "$status" == 404 ]]; then
+		curl -sf -X POST -H "X-API-Key: {{dev_pdns_key}}" -H 'Content-Type: application/json' \
+			-d '{"name":"{{zone}}.","kind":"Native","nameservers":[]}' "{{dev_pdns}}/zones" >/dev/null
+	fi
+
+[private]
+dev-record zone name type content:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	content='{{content}}'
+	body=$(printf '{"rrsets":[{"name":"%s.","type":"%s","ttl":60,"changetype":"REPLACE","records":[{"content":"%s","disabled":false}]}]}' \
+		'{{name}}' '{{type}}' "${content//\"/\\\"}")
+	curl -sf -X PATCH -H "X-API-Key: {{dev_pdns_key}}" -H 'Content-Type: application/json' \
+		-d "$body" "{{dev_pdns}}/zones/{{zone}}." >/dev/null
+
+dev-dns: (dev-zone "fortropp.test")
+	just dev-record fortropp.test fortropp.test A 127.0.0.1
+	just dev-record fortropp.test '*.fortropp.test' A 127.0.0.1
+
+dev-domain zone: (dev-zone zone)
+	just dev-record {{zone}} {{zone}} ALIAS edge.fortropp.test.
+	just dev-record {{zone}} www.{{zone}} CNAME edge.fortropp.test.
+
+dev-proof zone name token: (dev-zone zone)
+	just dev-record {{zone}} _fortropp-challenge.{{name}} TXT '"{{token}}"'
 
 dev-down:
 	docker compose -f infra/docker-compose.yml down

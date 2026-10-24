@@ -51,7 +51,6 @@ services:
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: edge.fortropp.test
       DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
-      PREVIEW_ORIGIN: http://preview.localhost:8787
       USER_CONTENT_DOMAIN: fortropp.test
     depends_on:
       postgres:
@@ -72,8 +71,11 @@ services:
       PDNS_AUTH_API_KEY: fortropp-dev-pdns
     ports:
       - "8082:8081"
+      - "127.0.0.1:5300:53/udp"
+      - "127.0.0.1:5300:53/tcp"
     volumes:
       - pdns_data:/var/lib/powerdns
+      - ./pdns-dev.conf:/etc/powerdns/pdns.d/fortropp-dev.conf:ro
     healthcheck:
       test: ["CMD", "pdns_control", "rping"]
       interval: 5s
@@ -97,7 +99,7 @@ services:
     restart: unless-stopped
     environment:
       WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
-      PREVIEW_DOMAIN: preview.localhost
+      USER_CONTENT_DOMAIN: fortropp.test
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
@@ -120,6 +122,7 @@ services:
     restart: unless-stopped
     environment:
       CADDY_SITE_ADDRESS: localhost
+      WORKER_ADDRESS: worker:8787
     ports:
       - "80:80"
       - "443:443"
