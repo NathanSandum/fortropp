@@ -52,6 +52,7 @@ services:
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:?}
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
       PREVIEW_ORIGIN: http://preview.localhost:${WORKER_PORT:?}
+      USER_CONTENT_DOMAIN: fortropp.test
     depends_on:
       postgres:
         condition: service_healthy
