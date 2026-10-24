@@ -21,6 +21,13 @@ prod-down:
 		-target=digitalocean_tag.backend \
 		-target=digitalocean_ssh_key.operator
 
+worker-deploy:
+	docker compose -f infra/docker-compose.yml build worker
+	set -a && . infra/tofu/.env && set +a && docker run --rm --entrypoint wrangler \
+		-e CLOUDFLARE_API_TOKEN="$WORKER_DEPLOY_TOKEN" \
+		-e CLOUDFLARE_ACCOUNT_ID="$TF_VAR_cloudflare_account_id" \
+		infra-worker deploy --env=""
+
 dev_pdns := "http://localhost:8082/api/v1/servers/localhost"
 dev_pdns_key := "fortropp-dev-pdns"
 

@@ -20,6 +20,12 @@ resource "cloudflare_dns_record" "user_content" {
   ttl     = 1
 }
 
+resource "cloudflare_workers_route" "user_content" {
+  zone_id = data.cloudflare_zone.user_content.zone_id
+  pattern = "*/*"
+  script  = "fortropp-r2-gateway"
+}
+
 resource "cloudflare_custom_hostname_fallback_origin" "edge" {
   zone_id = data.cloudflare_zone.user_content.zone_id
   origin  = local.edge_hostname
