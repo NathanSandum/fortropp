@@ -1,5 +1,6 @@
 infra/.env
 infra/tofu/.env
+infra/test-services/target/
 infra/tofu/.terraform/
 infra/tofu/*.tfstate
 infra/tofu/*.tfstate.*

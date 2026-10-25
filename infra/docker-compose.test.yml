@@ -55,6 +55,9 @@ services:
       SIGNUP: open
       USER_CONTENT_DOMAIN: fortropp.test
       PREVIEW_PORT: ${CADDY_PORT:?}
+      CLOUDFLARE_HOSTNAMES_API_URL: http://cloudflare-saas:8080/client/v4
+      CLOUDFLARE_HOSTNAMES_TOKEN: ${CLOUDFLARE_SAAS_TOKEN:?}
+      CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-test-zone
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +69,20 @@ services:
         condition: service_healthy
       pdns:
         condition: service_healthy
+      cloudflare-saas:
+        condition: service_healthy
+
+  cloudflare-saas:
+    build: ./test-services
+    environment:
+      FAKE_CLOUDFLARE_TOKEN: ${CLOUDFLARE_SAAS_TOKEN:?}
+    ports:
+      - "${CLOUDFLARE_SAAS_PORT:?}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
   pdns:
     image: powerdns/pdns-auth-51:5.1.4
