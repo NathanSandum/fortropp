@@ -28,6 +28,16 @@ worker-deploy:
 		-e CLOUDFLARE_ACCOUNT_ID="$TF_VAR_cloudflare_account_id" \
 		infra-worker deploy --env=""
 
+cloudflare-contract commit:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	spec=$(mktemp)
+	trap 'rm -f "$spec"' EXIT
+	curl -sfL -o "$spec" "https://raw.githubusercontent.com/cloudflare/api-schemas/{{commit}}/openapi.json"
+	mkdir -p infra/test-services/contract
+	cd infra/test-services && cargo run -q --bin extract_cloudflare_contract -- \
+		"$spec" {{commit}} contract/cloudflare-custom-hostnames.json
+
 dev_pdns := "http://localhost:8082/api/v1/servers/localhost"
 dev_pdns_key := "fortropp-dev-pdns"
 
@@ -105,4 +115,7 @@ ci-up:
 ci-down:
 	docker compose -f infra/docker-compose.test.yml -f infra/docker-compose.ci.yml --env-file frontend/.env.test rm -sfv forgejo forgejo-runner
 
-test: test-up backend::test worker::proofs frontend::test test-down
+test-services:
+	cd infra/test-services && cargo clippy --all-targets -q && cargo test -q
+
+test: test-up backend::test worker::proofs test-services frontend::test test-down
