@@ -118,4 +118,5 @@ ci-down:
 test-services:
 	cd infra/test-services && cargo clippy --all-targets -q && cargo test -q
 
-test: test-up backend::test worker::proofs test-services frontend::test test-down
+test: test-up backend::test worker::proofs test-services frontend::test
+	just test-down
