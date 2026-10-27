@@ -1,0 +1,17 @@
+handle /api/* {
+	reverse_proxy {args[0]}
+}
+
+handle /.well-known/oauth-* {
+	reverse_proxy {args[0]}
+}
+
+header /oauth/* {
+	Content-Security-Policy "frame-ancestors 'none'"
+	X-Frame-Options "DENY"
+}
+
+handle {
+	root * /srv
+	file_server
+}

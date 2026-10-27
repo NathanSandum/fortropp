@@ -1,0 +1,4 @@
+fortropp.dev {
+	tls /etc/fortropp/origin.pem /etc/fortropp/origin-key.pem
+	import app-routes.caddy backend:8080
+}

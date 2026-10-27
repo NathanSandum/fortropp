@@ -5,23 +5,7 @@
 }
 
 {$CADDY_SITE_ADDRESS:localhost:80} {
-	handle /api/* {
-		reverse_proxy worker:8080
-	}
-
-	handle /.well-known/oauth-* {
-		reverse_proxy worker:8080
-	}
-
-	header /oauth/* {
-		Content-Security-Policy "frame-ancestors 'none'"
-		X-Frame-Options "DENY"
-	}
-
-	handle {
-		root * /srv
-		file_server
-	}
+	import app-routes.caddy worker:8080
 }
 
 http://localhost:5555 {

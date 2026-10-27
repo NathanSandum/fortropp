@@ -1,0 +1,39 @@
+name: fortropp
+
+services:
+  caddy:
+    image: registry.digitalocean.com/fortropp/frontend:${FORTROPP_VERSION:?}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/fortropp/origin.pem:/etc/fortropp/origin.pem:ro
+      - /etc/fortropp/origin-key.pem:/etc/fortropp/origin-key.pem:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+  backend:
+    image: registry.digitalocean.com/fortropp/backend:${FORTROPP_VERSION:?}
+    restart: unless-stopped
+    env_file:
+      - backend.env
+      - /etc/fortropp/backend-secrets.env
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:
