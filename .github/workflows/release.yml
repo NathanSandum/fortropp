@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: registry.digitalocean.com/fortropp
+  VERSION: ${{ github.ref_name }}
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN }}
+          persist-credentials: false
+      - name: Log in to the registry
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login registry.digitalocean.com --username "$REGISTRY_TOKEN" --password-stdin
+      - name: Build and push backend
+        run: >-
+          docker buildx build --push --platform linux/amd64
+          --build-context site-config=worker/site-config
+          --tag "$REGISTRY/backend:$VERSION"
+          backend
+      - name: Build and push frontend
+        run: >-
+          docker buildx build --push --platform linux/amd64
+          --file infra/production/frontend.Dockerfile
+          --tag "$REGISTRY/frontend:$VERSION"
+          .
