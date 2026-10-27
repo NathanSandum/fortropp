@@ -173,6 +173,25 @@ test-services:
 test: test-up backend::test worker::proofs test-services frontend::test
 	just test-down
 
+deploy version:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	repo=NathanSandum/fortropp
+	built=$(gh run list --repo "$repo" --workflow Release --branch "{{version}}" --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+	if [ "$built" != "success" ]; then
+		echo "{{version}} has no successful Release run (got: ${built:-none})"
+		exit 1
+	fi
+	read -r -p "Deploy {{version}} to production? [y/N] " answer
+	if [ "$answer" != "y" ]; then
+		echo "Not deployed"
+		exit 1
+	fi
+	gh workflow run Deploy --repo "$repo" -f version="{{version}}"
+	sleep 5
+	run=$(gh run list --repo "$repo" --workflow Deploy --limit 1 --json databaseId --jq '.[0].databaseId')
+	gh run watch "$run" --repo "$repo" --exit-status
+
 release:
 	#!/usr/bin/env bash
 	set -euo pipefail
