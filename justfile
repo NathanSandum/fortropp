@@ -20,13 +20,16 @@ prod-init:
 prod-ssh-key: whoami
 	op read "op://fortropp/fortropp-backend-key/private_key?ssh-format=openssh" | ssh-add -t 3600 -
 
-prod-cloud-init: prod-ssh-key
+ssh-key-loaded:
+	@ssh-add -l > /dev/null 2>&1 || { echo "No key in ssh-agent: run just prod-ssh-key first"; exit 1; }
+
+prod-cloud-init: ssh-key-loaded
 	#!/usr/bin/env bash
 	set -euo pipefail
 	host=$(cd infra/tofu && op run --env-file .env.tpl -- tofu output -raw deploy_host)
 	ssh -o StrictHostKeyChecking=accept-new "root@$host" cloud-init status --wait
 
-prod-db-setup: prod-ssh-key
+prod-db-setup: ssh-key-loaded
 	#!/usr/bin/env bash
 	set -euo pipefail
 	outputs=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -json)
