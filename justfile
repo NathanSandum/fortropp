@@ -17,6 +17,34 @@ prod-plan:
 prod-init:
 	{{tofu}} init
 
+prod-secrets:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	repo=NathanSandum/fortropp
+	outputs=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -json)
+	output() {
+		printf '%s' "$outputs" | jq -r --arg name "$1" '.[$name].value // error("missing output \($name)")'
+	}
+	from_tofu=$(printf '%s' "$outputs" | jq -r '
+		[
+			["DATABASE_URL", "database_url"],
+			["SESSION_KEY", "session_key"],
+			["DOMAIN_VERIFICATION_KEY", "domain_verification_key"],
+			["S3_ENDPOINT", "s3_endpoint"],
+			["S3_PUBLIC_ORIGIN", "s3_endpoint"],
+			["KV_API_URL", "kv_api_url"],
+			["KV_NAMESPACE_ID", "kv_namespace_id"],
+			["CLOUDFLARE_HOSTNAMES_ZONE_ID", "cloudflare_hostnames_zone_id"]
+		][] as [$env, $name]
+		| "\($env)=\(.[$name].value // error("missing output \($name)"))"')
+	from_op=$(op inject -i infra/production/backend-prod.env.tpl)
+	certificate=$(output origin_certificate)
+	private_key=$(output origin_private_key)
+	printf '%s\n%s\n' "$from_op" "$from_tofu" | gh secret set BACKEND_ENV --repo "$repo"
+	printf '%s\n' "$certificate" | gh secret set ORIGIN_CERTIFICATE --repo "$repo"
+	printf '%s\n' "$private_key" | gh secret set ORIGIN_PRIVATE_KEY --repo "$repo"
+	echo "Updated BACKEND_ENV, ORIGIN_CERTIFICATE and ORIGIN_PRIVATE_KEY in $repo"
+
 prod-down:
 	{{tofu}} destroy \
 		-target=digitalocean_project.fortropp \
