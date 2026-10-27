@@ -6,10 +6,13 @@ dev-up: dev-down build
 	docker compose -f infra/docker-compose.yml up -d --build
 	just dev-dns
 
-tofu := "cd infra/tofu && set -a && . ./.env && set +a && tofu"
+tofu := "cd infra/tofu && op run --env-file .env.tpl -- tofu"
 
 prod-up:
 	{{tofu}} apply
+
+prod-plan:
+	{{tofu}} plan
 
 prod-down:
 	{{tofu}} destroy \
@@ -23,9 +26,8 @@ prod-down:
 
 worker-deploy:
 	docker compose -f infra/docker-compose.yml build worker
-	set -a && . infra/tofu/.env && set +a && docker run --rm --entrypoint wrangler \
-		-e CLOUDFLARE_API_TOKEN="$WORKER_DEPLOY_TOKEN" \
-		-e CLOUDFLARE_ACCOUNT_ID="$TF_VAR_cloudflare_account_id" \
+	op run --env-file infra/worker-deploy.env.tpl -- docker run --rm --entrypoint wrangler \
+		-e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
 		infra-worker deploy --env=""
 
 cloudflare-contract commit:

@@ -1,0 +1,7 @@
+CLOUDFLARE_API_TOKEN=op://fortropp/tofu/CLOUDFLARE_API_TOKEN
+TF_VAR_cloudflare_account_id=op://fortropp/tofu/TF_VAR_cloudflare_account_id
+DIGITALOCEAN_TOKEN=op://fortropp/tofu/DIGITALOCEAN_TOKEN
+AWS_ACCESS_KEY_ID=op://fortropp/tofu/AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=op://fortropp/tofu/AWS_SECRET_ACCESS_KEY
+TF_VAR_state_passphrase=op://fortropp/tofu/TF_VAR_state_passphrase
+TF_VAR_ssh_public_key=op://fortropp/tofu/TF_VAR_ssh_public_key
