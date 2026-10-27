@@ -18,7 +18,7 @@ prod-init:
 	{{tofu}} init
 
 prod-ssh-key: whoami
-	op read "op://fortropp/fortropp-backend-key/private_key?ssh-format=openssh" | ssh-add -t 3600 -
+	op read "op://fortropp/fortropp-backend-key/private_key?ssh-format=openssh" | ssh-add -t 900 -
 
 ssh-key-loaded:
 	@ssh-add -l > /dev/null 2>&1 || { echo "No key in ssh-agent: run just prod-ssh-key first"; exit 1; }
