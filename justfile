@@ -14,6 +14,9 @@ prod-up:
 prod-plan:
 	{{tofu}} plan
 
+prod-init:
+	{{tofu}} init
+
 prod-down:
 	{{tofu}} destroy \
 		-target=digitalocean_project.fortropp \

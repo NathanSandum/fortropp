@@ -8,6 +8,14 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.106"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.4"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9"
+    }
   }
 
   backend "s3" {
