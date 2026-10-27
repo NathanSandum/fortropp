@@ -40,10 +40,20 @@ prod-secrets:
 	from_op=$(op inject -i infra/production/backend-prod.env.tpl)
 	certificate=$(output origin_certificate)
 	private_key=$(output origin_private_key)
+	deploy_host=$(output deploy_host)
+	deploy_key=$(output deploy_private_key)
+	known_hosts=$(ssh-keyscan -t ed25519 "$deploy_host" 2>/dev/null)
+	if [ -z "$known_hosts" ]; then
+		echo "No ed25519 host key from $deploy_host; is the droplet up?"
+		exit 1
+	fi
 	printf '%s\n%s\n' "$from_op" "$from_tofu" | gh secret set BACKEND_ENV --repo "$repo"
 	printf '%s\n' "$certificate" | gh secret set ORIGIN_CERTIFICATE --repo "$repo"
 	printf '%s\n' "$private_key" | gh secret set ORIGIN_PRIVATE_KEY --repo "$repo"
-	echo "Updated BACKEND_ENV, ORIGIN_CERTIFICATE and ORIGIN_PRIVATE_KEY in $repo"
+	printf '%s' "$deploy_host" | gh secret set DEPLOY_HOST --repo "$repo"
+	printf '%s\n' "$deploy_key" | gh secret set DEPLOY_SSH_KEY --repo "$repo"
+	printf '%s\n' "$known_hosts" | gh secret set DEPLOY_KNOWN_HOSTS --repo "$repo"
+	echo "Updated BACKEND_ENV, ORIGIN_*, DEPLOY_* in $repo"
 
 prod-down:
 	{{tofu}} destroy \

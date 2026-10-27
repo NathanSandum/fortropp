@@ -16,6 +16,15 @@ resource "digitalocean_ssh_key" "operator" {
   public_key = var.ssh_public_key
 }
 
+resource "tls_private_key" "deploy" {
+  algorithm = "ED25519"
+}
+
+resource "digitalocean_ssh_key" "deploy" {
+  name       = "fortropp-deploy"
+  public_key = tls_private_key.deploy.public_key_openssh
+}
+
 resource "digitalocean_droplet" "backend" {
   name       = "fortropp-backend"
   region     = local.region
@@ -24,7 +33,7 @@ resource "digitalocean_droplet" "backend" {
   vpc_uuid   = digitalocean_vpc.production.id
   ipv6       = true
   monitoring = true
-  ssh_keys   = [digitalocean_ssh_key.operator.fingerprint]
+  ssh_keys   = [digitalocean_ssh_key.operator.fingerprint, digitalocean_ssh_key.deploy.fingerprint]
   tags       = [digitalocean_tag.backend.id]
   user_data  = file("${path.module}/cloud-init.yaml")
 }
