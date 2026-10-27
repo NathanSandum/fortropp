@@ -28,6 +28,18 @@ output "database_url" {
   sensitive = true
 }
 
+output "database_admin_url" {
+  value = format(
+    "postgres://%s:%s@%s:%d/%s?sslmode=require",
+    digitalocean_database_cluster.postgres.user,
+    urlencode(digitalocean_database_cluster.postgres.password),
+    digitalocean_database_cluster.postgres.private_host,
+    digitalocean_database_cluster.postgres.port,
+    digitalocean_database_db.fortropp.name,
+  )
+  sensitive = true
+}
+
 output "s3_endpoint" {
   value = "https://${var.cloudflare_account_id}.r2.cloudflarestorage.com"
 }

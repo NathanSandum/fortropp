@@ -17,6 +17,15 @@ prod-plan:
 prod-init:
 	{{tofu}} init
 
+prod-db-setup:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	outputs=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -json)
+	host=$(printf '%s' "$outputs" | jq -r '.deploy_host.value')
+	admin_url=$(printf '%s' "$outputs" | jq -r '.database_admin_url.value // error("missing output database_admin_url")')
+	printf '%s\nGRANT USAGE, CREATE ON SCHEMA public TO fortropp;\n' "$admin_url" \
+		| ssh -i ~/.ssh/fortropp "root@$host" 'read -r url && exec docker run --rm -i -e "DATABASE_URL=$url" postgres:18 sh -c "exec psql \"\$DATABASE_URL\" -v ON_ERROR_STOP=1"'
+
 prod-secrets:
 	#!/usr/bin/env bash
 	set -euo pipefail
