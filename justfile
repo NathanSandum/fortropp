@@ -173,7 +173,10 @@ test-services:
 test: test-up backend::test worker::proofs test-services frontend::test
 	just test-down
 
-deploy version:
+whoami:
+	@op whoami > /dev/null 2>&1 || { echo "No 1Password session: run op signin first"; exit 1; }
+
+deploy version: whoami
 	#!/usr/bin/env bash
 	set -euo pipefail
 	repo=NathanSandum/fortropp
@@ -192,7 +195,7 @@ deploy version:
 	run=$(gh run list --repo "$repo" --workflow Deploy --limit 1 --json databaseId --jq '.[0].databaseId')
 	gh run watch "$run" --repo "$repo" --exit-status
 
-release:
+release: whoami
 	#!/usr/bin/env bash
 	set -euo pipefail
 	published() {
