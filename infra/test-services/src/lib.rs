@@ -4,4 +4,5 @@
 )]
 
 pub mod cloudflare_saas;
+pub mod echo;
 pub mod openapi_contract;
