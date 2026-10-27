@@ -120,3 +120,39 @@ test-services:
 
 test: test-up backend::test worker::proofs test-services frontend::test
 	just test-down
+
+release:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	published() {
+		for repo in . backend frontend worker; do
+			git -C "$repo" fetch -q origin
+			if [ -n "$(git -C "$repo" status --porcelain)" ]; then
+				echo "$repo has uncommitted or untracked changes"
+				exit 1
+			fi
+			if ! git -C "$repo" merge-base --is-ancestor HEAD origin/HEAD; then
+				echo "$repo has commits not on origin's default branch"
+				exit 1
+			fi
+		done
+	}
+	published
+	commit=$(git rev-parse HEAD)
+	just test
+	published
+	if [ "$(git rev-parse HEAD)" != "$commit" ]; then
+		echo "HEAD moved during the tests"
+		exit 1
+	fi
+	git fetch -q --tags origin
+	base="v$(date +%Y.%m.%d)"
+	tag="$base"
+	n=1
+	while git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do
+		n=$((n + 1))
+		tag="$base.$n"
+	done
+	git tag -a "$tag" -m "$tag" "$commit"
+	git push -q origin "$tag"
+	echo "Released $tag"
