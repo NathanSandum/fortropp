@@ -76,6 +76,17 @@ prod-secrets:
 	printf '%s\n' "$known_hosts" | gh secret set DEPLOY_KNOWN_HOSTS --repo "$repo"
 	echo "Updated BACKEND_ENV, ORIGIN_*, DEPLOY_* in $repo"
 
+ci-cache-secret:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	endpoint=$(cd infra/tofu && op run --env-file .env.tpl -- tofu output -raw s3_endpoint)
+	read -rp "Access Key ID: " key_id
+	read -rsp "Secret Access Key: " secret_key
+	echo
+	printf 'SCCACHE_BUCKET=fortropp-ci-cache\nSCCACHE_ENDPOINT=%s\nSCCACHE_REGION=auto\nAWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s\n' "$endpoint" "$key_id" "$secret_key" \
+		| gh secret set SCCACHE_ENV --repo NathanSandum/fortropp
+	echo "Updated SCCACHE_ENV in NathanSandum/fortropp"
+
 prod-down:
 	{{tofu}} destroy \
 		-target=digitalocean_project.fortropp \
