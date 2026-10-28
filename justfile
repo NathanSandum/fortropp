@@ -79,7 +79,7 @@ prod-secrets:
 ci-cache-secret:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	endpoint=$(cd infra/tofu && op run --env-file .env.tpl -- tofu output -raw s3_endpoint)
+	endpoint=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -raw s3_endpoint)
 	read -rp "Access Key ID: " key_id
 	read -rsp "Secret Access Key: " secret_key
 	echo
