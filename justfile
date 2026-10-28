@@ -242,14 +242,13 @@ release: whoami
 		echo "HEAD moved during the tests"
 		exit 1
 	fi
-	git fetch -q --tags origin
+	released=$(git ls-remote --tags --refs origin | cut -f2)
 	base="v$(date +%Y.%m.%d)"
 	tag="$base"
 	n=1
-	while git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do
+	while grep -qxF "refs/tags/$tag" <<< "$released"; do
 		n=$((n + 1))
 		tag="$base.$n"
 	done
-	git tag -a "$tag" -m "$tag" "$commit"
-	git push -q origin "$tag"
+	git push -q origin "$commit:refs/tags/$tag"
 	echo "Released $tag"
