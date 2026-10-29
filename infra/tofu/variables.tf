@@ -10,3 +10,13 @@ variable "state_passphrase" {
 variable "ssh_public_key" {
   type = string
 }
+
+variable "cloudflare_email_routing_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "operator_email" {
+  type      = string
+  sensitive = true
+}
