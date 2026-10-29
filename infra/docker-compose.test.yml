@@ -84,6 +84,23 @@ services:
       timeout: 5s
       retries: 30
 
+  postmark:
+    build: ./test-services
+    entrypoint: ["postmark"]
+    environment:
+      FAKE_POSTMARK_TOKEN: ${POSTMARK_TOKEN:?}
+      FAKE_POSTMARK_MAILPIT_URL: http://mailpit:8025
+    ports:
+      - "${POSTMARK_PORT:?}:8080"
+    depends_on:
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
   pdns:
     image: powerdns/pdns-auth-51:5.1.4
     environment:
