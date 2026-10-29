@@ -219,12 +219,21 @@ fn inactive_recipients(addresses: &[String]) -> HttpResponse {
     )
 }
 
-async fn deliver(mailpit: &str, message: &MailpitMessage) -> bool {
-    awc::Client::default()
+async fn deliver(mailpit: &str, message: &MailpitMessage) -> Result<(), String> {
+    let mut response = awc::Client::default()
         .post(format!("{mailpit}/api/v1/send"))
         .send_json(message)
         .await
-        .is_ok_and(|response| response.status().is_success())
+        .map_err(|error| format!("Mailpit unreachable: {error}"))?;
+    if response.status().is_success() {
+        return Ok(());
+    }
+    let body = response.body().await.unwrap_or_default();
+    Err(format!(
+        "Mailpit answered {}: {}",
+        response.status(),
+        String::from_utf8_lossy(&body)
+    ))
 }
 
 async fn send(
@@ -239,8 +248,9 @@ async fn send(
     let to = body.to.clone();
     match decide(body, &state) {
         Decision::Deliver(message) => {
-            if !deliver(&state.mailpit, &message).await {
-                return poisoned();
+            if let Err(reason) = deliver(&state.mailpit, &message).await {
+                eprintln!("delivery to Mailpit failed: {reason}");
+                return HttpResponse::InternalServerError().body(reason);
             }
         }
         Decision::Drop => {}

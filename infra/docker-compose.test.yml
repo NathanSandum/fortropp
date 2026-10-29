@@ -43,9 +43,10 @@ services:
       KV_API_URL: http://localhost:${WORKER_PORT:?}/cdn-cgi/local/explorer/api
       KV_API_TOKEN: local
       KV_NAMESPACE_ID: fortropp-site-routes-e2e
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-      SMTP_FROM: noreply@fortropp.local
+      POSTMARK_API_URL: http://postmark:8080
+      POSTMARK_SERVER_TOKEN: ${POSTMARK_TOKEN:?}
+      MAIL_FROM: noreply@fortropp.local
+      MAIL_REPLY_TO: support@fortropp.local
       FRONTEND_ORIGIN: https://localhost:${CADDY_PORT:?}
       COOKIE_SECURE: "true"
       DNS_NAMESERVER: pdns:53
@@ -65,7 +66,7 @@ services:
         condition: service_healthy
       worker:
         condition: service_healthy
-      mailpit:
+      postmark:
         condition: service_healthy
       pdns:
         condition: service_healthy
