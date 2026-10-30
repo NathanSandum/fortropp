@@ -16,6 +16,11 @@ variable "cloudflare_email_routing_token" {
   sensitive = true
 }
 
+variable "cloudflare_turnstile_token" {
+  type      = string
+  sensitive = true
+}
+
 variable "operator_email" {
   type      = string
   sensitive = true
