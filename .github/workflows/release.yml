@@ -31,6 +31,7 @@ jobs:
           docker buildx build --push --platform linux/amd64
           --secret id=sccache,env=SCCACHE_ENV
           --build-context site-config=worker/site-config
+          --build-context metadata=.
           --tag "$REGISTRY/backend:$VERSION"
           backend
       - name: Build and push frontend

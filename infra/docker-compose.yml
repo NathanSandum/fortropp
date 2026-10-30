@@ -28,6 +28,7 @@ services:
       context: ../backend
       additional_contexts:
         site-config: ../worker/site-config
+        metadata: ..
     restart: unless-stopped
     network_mode: "service:worker"
     environment:

@@ -2,7 +2,8 @@ FROM node:26.12.1-bookworm-slim AS build
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
 RUN npm ci --ignore-scripts
-COPY frontend/vite.config.ts frontend/tsconfig.json frontend/components.json ./
+COPY metadata.toml /metadata.toml
+COPY frontend/vite.config.ts frontend/vite-plugin-toml.js frontend/tsconfig.json frontend/components.json ./
 COPY frontend/src ./src
 COPY frontend/static ./static
 RUN npm run build

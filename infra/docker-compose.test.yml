@@ -28,6 +28,7 @@ services:
       context: ../backend
       additional_contexts:
         site-config: ../worker/site-config
+        metadata: ..
     network_mode: "service:worker"
     environment:
       RUST_LOG: backend=debug,info
