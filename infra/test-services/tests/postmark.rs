@@ -333,3 +333,35 @@ async fn an_outage_and_a_rate_limit_refuse_every_send_until_cleared() {
         )
     );
 }
+
+#[actix_web::test]
+async fn pending_approval_refuses_recipients_outside_the_senders_domain() {
+    let (server, recorded) = mailpit();
+    let app = app(server.url("")).await;
+    fail(&app, "pending_approval").await;
+    let outside =
+        outcome(test::call_service(&app, send(&message("user@example.test", None))).await).await;
+    let blackhole = outcome(
+        test::call_service(&app, send(&message("test@blackhole.postmarkapp.com", None))).await,
+    )
+    .await;
+    let inside =
+        outcome(test::call_service(&app, send(&message("nathan@fortropp.dev", None))).await).await;
+    let refusal = (
+        StatusCode::UNPROCESSABLE_ENTITY,
+        Some("412".to_string()),
+        json!({
+            "ErrorCode": 412,
+            "Message": "While your account is pending approval, all recipient addresses must share the same domain as the 'From' address.",
+        }),
+    );
+    assert_eq!(
+        (outside, blackhole, inside, recorded.lock().unwrap().clone()),
+        (
+            refusal.clone(),
+            refusal,
+            accepted("nathan@fortropp.dev"),
+            vec![delivered("nathan@fortropp.dev", "outbound")],
+        )
+    );
+}

@@ -8,6 +8,7 @@ const BLACKHOLE: &str = "test@blackhole.postmarkapp.com";
 const DEFAULT_STREAM: &str = "outbound";
 const INVALID_TOKEN: u32 = 10;
 const INACTIVE_RECIPIENT: u32 = 406;
+const PENDING_APPROVAL: u32 = 412;
 const RATE_LIMITED: u32 = 429;
 
 #[derive(Clone, Copy, Deserialize)]
@@ -16,6 +17,7 @@ enum Failure {
     None,
     Outage,
     RateLimited,
+    PendingApproval,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -162,7 +164,7 @@ fn refused(request: &HttpRequest, state: &State) -> Option<HttpResponse> {
         return Some(poisoned());
     };
     match *failure {
-        Failure::None => None,
+        Failure::None | Failure::PendingApproval => None,
         Failure::Outage => Some(HttpResponse::ServiceUnavailable().finish()),
         Failure::RateLimited => Some(
             HttpResponse::TooManyRequests()
@@ -179,7 +181,12 @@ enum Decision {
     Deliver(MailpitMessage),
     Drop,
     Inactive(Vec<String>),
+    PendingApproval,
     Poisoned,
+}
+
+fn domain(email: &str) -> &str {
+    email.rsplit_once('@').map_or("", |(_, domain)| domain)
 }
 
 fn decide(body: SendBody, state: &State) -> Decision {
@@ -187,10 +194,23 @@ fn decide(body: SendBody, state: &State) -> Decision {
         .message_stream
         .clone()
         .unwrap_or_else(|| DEFAULT_STREAM.to_string());
+    let recipients = Mailbox::list(&body.to);
+    let Ok(failure) = state.failure.lock() else {
+        return Decision::Poisoned;
+    };
+    let pending = matches!(*failure, Failure::PendingApproval);
+    drop(failure);
+    let sender = Mailbox::parse(&body.from);
+    if pending
+        && recipients
+            .iter()
+            .any(|recipient| domain(&recipient.email) != domain(&sender.email))
+    {
+        return Decision::PendingApproval;
+    }
     let Ok(suppressions) = state.suppressions.lock() else {
         return Decision::Poisoned;
     };
-    let recipients = Mailbox::list(&body.to);
     let inactive: Vec<String> = recipients
         .iter()
         .map(|recipient| recipient.email.clone())
@@ -255,6 +275,12 @@ async fn send(
         }
         Decision::Drop => {}
         Decision::Inactive(addresses) => return inactive_recipients(&addresses),
+        Decision::PendingApproval => {
+            return postmark_error(
+                PENDING_APPROVAL,
+                "While your account is pending approval, all recipient addresses must share the same domain as the 'From' address.",
+            );
+        }
         Decision::Poisoned => return poisoned(),
     }
     HttpResponse::Ok().json(json!({
