@@ -1,8 +1,8 @@
 resource "cloudflare_dns_record" "postmark_dkim" {
   zone_id = data.cloudflare_zone.app.zone_id
-  name    = "20261029021601pm._domainkey.fortropp.dev"
+  name    = "20261029032146pm._domainkey.fortropp.dev"
   type    = "TXT"
-  content = "k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqn/QkeHYd3oSOW1fQqNxVHjpkkyWs4qiE6In+Km6TNK8YF9K/9kVG7mnbzmUXKjgOyoSkgwpvM1OIYylIAW8XikRetICWzOSiLHmohWd7zXN+3Fa2XHOLmHDg3FlvwnWEX5wj4+2LGreKTjELfaQP+hSQBOf3xAi78t8GL0KnkwIDAQAB"
+  content = "k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCyIj5mmDUEJn3+5eHVFngmX0hzCZrLhGYoYcvTlpLqoX4FCI3RWRfHco0uBt/0Ey3rDn/Xyi6ty1vkEXE6CPdAyy7ujsP74bMvis0WNo0mz6eQjdr1Xpz2ewG9piB52hAN3yWo2AyDdVrYcxQtwtAAPDdrjF7hpF0INNsOo8BwFQIDAQAB"
   ttl     = 1
 }
 
