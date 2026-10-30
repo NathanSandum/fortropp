@@ -211,7 +211,7 @@ async fn a_missing_or_wrong_token_is_refused() {
         Some("10".to_string()),
         json!({
             "ErrorCode": 10,
-            "Message": "Request does not contain a valid Server or Account token.",
+            "Message": "Request does not contain a valid Server token.",
         }),
     );
     let missing = test::TestRequest::post()

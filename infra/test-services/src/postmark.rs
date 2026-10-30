@@ -154,7 +154,7 @@ fn refused(request: &HttpRequest, state: &State) -> Option<HttpResponse> {
                 .insert_header(("X-PM-ApiErrorCode", INVALID_TOKEN.to_string()))
                 .json(json!({
                     "ErrorCode": INVALID_TOKEN,
-                    "Message": "Request does not contain a valid Server or Account token.",
+                    "Message": "Request does not contain a valid Server token.",
                 })),
         );
     }
