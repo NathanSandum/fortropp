@@ -347,19 +347,18 @@ async fn pending_approval_refuses_recipients_outside_the_senders_domain() {
     .await;
     let inside =
         outcome(test::call_service(&app, send(&message("nathan@fortropp.dev", None))).await).await;
-    let refusal = (
-        StatusCode::UNPROCESSABLE_ENTITY,
-        Some("412".to_string()),
-        json!({
-            "ErrorCode": 412,
-            "Message": "While your account is pending approval, all recipient addresses must share the same domain as the 'From' address.",
-        }),
-    );
     assert_eq!(
         (outside, blackhole, inside, recorded.lock().unwrap().clone()),
         (
-            refusal.clone(),
-            refusal,
+            (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Some("412".to_string()),
+                json!({
+                    "ErrorCode": 412,
+                    "Message": "While your account is pending approval, all recipient addresses must share the same domain as the 'From' address.",
+                }),
+            ),
+            accepted("test@blackhole.postmarkapp.com"),
             accepted("nathan@fortropp.dev"),
             vec![delivered("nathan@fortropp.dev", "outbound")],
         )

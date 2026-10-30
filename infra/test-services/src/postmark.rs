@@ -202,9 +202,9 @@ fn decide(body: SendBody, state: &State) -> Decision {
     drop(failure);
     let sender = Mailbox::parse(&body.from);
     if pending
-        && recipients
-            .iter()
-            .any(|recipient| domain(&recipient.email) != domain(&sender.email))
+        && recipients.iter().any(|recipient| {
+            recipient.email != BLACKHOLE && domain(&recipient.email) != domain(&sender.email)
+        })
     {
         return Decision::PendingApproval;
     }
