@@ -7,4 +7,5 @@ TF_VAR_state_passphrase=op://fortropp/tofu/TF_VAR_state_passphrase
 TF_VAR_ssh_public_key=op://fortropp/fortropp-backend-key/public_key
 TF_VAR_cloudflare_email_routing_token=op://fortropp/tofu/TF_VAR_cloudflare_email_routing_token
 TF_VAR_cloudflare_turnstile_token=op://fortropp/tofu/TF_VAR_cloudflare_turnstile_token
+TF_VAR_cloudflare_waf_token=op://fortropp/tofu/TF_VAR_cloudflare_waf_token
 TF_VAR_operator_email=op://fortropp/tofu/TF_VAR_operator_email

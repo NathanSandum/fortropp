@@ -10,4 +10,9 @@ provider "cloudflare" {
   api_token = var.cloudflare_turnstile_token
 }
 
+provider "cloudflare" {
+  alias     = "waf"
+  api_token = var.cloudflare_waf_token
+}
+
 provider "digitalocean" {}
