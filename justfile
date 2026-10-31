@@ -196,6 +196,8 @@ test-services:
 test: test-up backend::test worker::proofs test-services frontend::test
 	just test-down
 
+test-quick: backend::test worker::proofs test-services frontend::test-unit
+
 whoami:
 	@op whoami > /dev/null 2>&1 || { echo "No 1Password session: run op signin first"; exit 1; }
 
