@@ -55,6 +55,7 @@ services:
       DOMAIN_VERIFICATION_KEY: ${DOMAIN_VERIFICATION_KEY:?}
       SESSION_KEY: ${SESSION_KEY:?}
       SIGNUP: open
+      TURNSTILE: "off"
       USER_CONTENT_DOMAIN: fortropp.test
       PREVIEW_PORT: ${CADDY_PORT:?}
       CLOUDFLARE_HOSTNAMES_API_URL: http://cloudflare-saas:8080/client/v4

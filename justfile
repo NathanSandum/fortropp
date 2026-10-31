@@ -55,7 +55,9 @@ prod-secrets:
 			["S3_PUBLIC_ORIGIN", "s3_endpoint"],
 			["KV_API_URL", "kv_api_url"],
 			["KV_NAMESPACE_ID", "kv_namespace_id"],
-			["CLOUDFLARE_HOSTNAMES_ZONE_ID", "cloudflare_hostnames_zone_id"]
+			["CLOUDFLARE_HOSTNAMES_ZONE_ID", "cloudflare_hostnames_zone_id"],
+			["TURNSTILE_SITEKEY", "turnstile_sitekey"],
+			["TURNSTILE_SECRET", "turnstile_secret"]
 		][] as [$env, $name]
 		| "\($env)=\(.[$name].value // error("missing output \($name)"))"')
 	from_op=$(op inject -i infra/production/backend-prod.env.tpl)
