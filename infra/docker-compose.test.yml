@@ -119,12 +119,14 @@ services:
   echo:
     build: ./test-services
     entrypoint: ["echo_server"]
+    volumes:
+      - echo_certificate:/certificate
     networks:
       default:
         aliases:
           - echo.fortropp.test
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/"]
+      test: ["CMD", "curl", "-skf", "https://127.0.0.1:8080/"]
       interval: 2s
       timeout: 5s
       retries: 15
@@ -147,6 +149,12 @@ services:
       USER_CONTENT_DOMAIN: fortropp.test
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      NODE_EXTRA_CA_CERTS: /certificate/echo.pem
+    volumes:
+      - echo_certificate:/certificate:ro
+    depends_on:
+      echo:
+        condition: service_healthy
     ports:
       - "${WORKER_PORT:?}:${WORKER_PORT:?}"
     healthcheck:
@@ -174,3 +182,6 @@ services:
       - ../frontend/build:/srv
     depends_on:
       - backend
+
+volumes:
+  echo_certificate:
