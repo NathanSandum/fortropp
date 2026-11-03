@@ -105,6 +105,28 @@ worker-deploy:
 		-e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
 		infra-worker deploy --env=""
 
+prod-hostnames +hostnames: whoami
+	#!/usr/bin/env bash
+	set -euo pipefail
+	zone=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -raw cloudflare_hostnames_zone_id)
+	token=$(op read op://fortropp/backend-prod/CLOUDFLARE_HOSTNAMES_TOKEN)
+	for hostname in {{hostnames}}; do
+		curl -sS -G --data-urlencode "hostname.exact=$hostname" \
+			-H @<(printf 'Authorization: Bearer %s\n' "$token") \
+			"https://api.cloudflare.com/client/v4/zones/$zone/custom_hostnames" \
+			| jq -r --arg hostname "$hostname" '
+				if .success | not then
+					"\($hostname): lookup failed: \(.errors | map("\(.message) (\(.code))") | join("; "))"
+				elif .result == [] then
+					"\($hostname): not registered"
+				else
+					.result[0]
+					| "\($hostname): hostname \(.status), certificate \(.ssl.status // "none")",
+						"  hostname error: \((.verification_errors // [])[])",
+						"  certificate error: \((.ssl.validation_errors // [])[].message)"
+				end'
+	done
+
 cloudflare-contract commit:
 	#!/usr/bin/env bash
 	set -euo pipefail
