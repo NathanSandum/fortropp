@@ -20,6 +20,15 @@ resource "cloudflare_dns_record" "user_content" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "apex_test" {
+  zone_id = data.cloudflare_zone.user_content.zone_id
+  name    = "qt.apex.fortropp.app"
+  type    = "CNAME"
+  content = local.edge_hostname
+  proxied = true
+  ttl     = 1
+}
+
 resource "cloudflare_workers_route" "user_content" {
   zone_id = data.cloudflare_zone.user_content.zone_id
   pattern = "*/*"
