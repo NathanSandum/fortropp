@@ -18,6 +18,7 @@ struct Record {
     status: String,
     ssl_status: String,
     verification_errors: Vec<String>,
+    revalidations: u32,
 }
 
 impl Record {
@@ -28,6 +29,7 @@ impl Record {
             status: "pending".to_string(),
             ssl_status: "pending_validation".to_string(),
             verification_errors: vec![AWAITING_DNS.to_string()],
+            revalidations: 0,
         }
     }
 
@@ -207,6 +209,35 @@ async fn delete(
     envelope(&json!({ "id": id, "ssl": null }))
 }
 
+async fn edit(
+    request: HttpRequest,
+    path: web::Path<(String, String)>,
+    state: web::Data<State>,
+) -> HttpResponse {
+    if let Some(refusal) = refused(&request, &state) {
+        return refusal;
+    }
+    let Some(mut hostnames) = locked(&state) else {
+        return poisoned();
+    };
+    let (_, id) = path.into_inner();
+    let Some(hostname) = hostnames.values_mut().find(|hostname| hostname.id == id) else {
+        return failure(NOT_FOUND, "The custom hostname was not found.");
+    };
+    hostname.revalidations = hostname.revalidations.saturating_add(1);
+    envelope(&hostname.json())
+}
+
+async fn revalidations(path: web::Path<String>, state: web::Data<State>) -> HttpResponse {
+    let Some(hostnames) = locked(&state) else {
+        return poisoned();
+    };
+    let count = hostnames
+        .get(&path.into_inner())
+        .map_or(0, |hostname| hostname.revalidations);
+    HttpResponse::Ok().json(json!({ "count": count }))
+}
+
 #[derive(Deserialize)]
 struct SetBody {
     status: String,
@@ -276,7 +307,15 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         "/client/v4/zones/{zone}/custom_hostnames/{id}",
         web::delete().to(delete),
     )
+    .route(
+        "/client/v4/zones/{zone}/custom_hostnames/{id}",
+        web::patch().to(edit),
+    )
     .route("/fake/hostnames/{hostname}", web::put().to(set))
+    .route(
+        "/fake/revalidations/{hostname}",
+        web::get().to(revalidations),
+    )
     .route("/fake/rejections/{hostname}", web::put().to(reject))
     .route("/fake/outage", web::put().to(outage))
     .route("/health", web::get().to(health));

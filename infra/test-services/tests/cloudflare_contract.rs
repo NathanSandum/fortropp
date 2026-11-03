@@ -117,6 +117,29 @@ async fn every_response_the_fake_gives_matches_cloudflares_schema() {
     assert_eq!(failure_violations("create", &refused), Vec::<String>::new());
 
     let id = created["result"]["id"].as_str().unwrap().to_string();
+    let edited = test::call_service(
+        &app,
+        test::TestRequest::patch()
+            .uri(&format!("{ZONE}/{id}"))
+            .insert_header(bearer.clone())
+            .set_json(json!({ "ssl": { "method": "http", "type": "dv" } }))
+            .to_request(),
+    )
+    .await;
+    assert_eq!(edited.status(), StatusCode::OK);
+    let edited: Value = test::read_body_json(edited).await;
+    assert_eq!(violations("edit", "200", &edited), Vec::<String>::new());
+
+    let revalidations = test::call_service(
+        &app,
+        test::TestRequest::get()
+            .uri("/fake/revalidations/a.test")
+            .to_request(),
+    )
+    .await;
+    let revalidations: Value = test::read_body_json(revalidations).await;
+    assert_eq!(revalidations, json!({ "count": 1 }));
+
     let deleted = test::call_service(
         &app,
         test::TestRequest::delete()
@@ -140,4 +163,20 @@ async fn every_response_the_fake_gives_matches_cloudflares_schema() {
     assert_eq!(missing.status(), StatusCode::BAD_REQUEST);
     let missing: Value = test::read_body_json(missing).await;
     assert_eq!(violations("delete", "4XX", &missing), Vec::<String>::new());
+
+    let edited_missing = test::call_service(
+        &app,
+        test::TestRequest::patch()
+            .uri(&format!("{ZONE}/{id}"))
+            .insert_header(("Authorization", format!("Bearer {TOKEN}")))
+            .set_json(json!({ "ssl": { "method": "http", "type": "dv" } }))
+            .to_request(),
+    )
+    .await;
+    assert_eq!(edited_missing.status(), StatusCode::BAD_REQUEST);
+    let edited_missing: Value = test::read_body_json(edited_missing).await;
+    assert_eq!(
+        failure_violations("edit", &edited_missing),
+        Vec::<String>::new()
+    );
 }
