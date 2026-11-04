@@ -231,16 +231,18 @@ rollback-rehearsal previous: test-up
 	old_frontend=$(mktemp)
 	old_backend=$(mktemp)
 	old_both=$(mktemp)
+	survivor=$(mktemp)
 	cleanup() {
 		$compose down -v
 		git worktree remove --force "$worktree"
-		rm -f "$old_frontend" "$old_backend" "$old_both"
+		rm -f "$old_frontend" "$old_backend" "$old_both" "$survivor" "$survivor.storage"
 	}
 	trap cleanup EXIT
 	step() {
 		printf '\n=== %s\n' "$1"
 	}
 	step "Building {{previous}}"
+	git fetch -q origin --tags
 	git worktree add -q --detach "$worktree" "{{previous}}"
 	git -C "$worktree" submodule update --init -q backend frontend worker
 	docker build -q -t "fortropp-rehearsal-backend:{{previous}}" \
@@ -259,9 +261,14 @@ rollback-rehearsal previous: test-up
 	full_e2e() {
 		e2e --grep-invert @exclusive && e2e --grep @exclusive --workers=1
 	}
+	survivor_check() {
+		(cd frontend && REHEARSAL_STEP="$1" REHEARSAL_STATE="$survivor" e2e rehearsal_pinned_preview)
+	}
 	(cd frontend && npx playwright install)
 	step "New version, full e2e"
 	(cd frontend && full_e2e)
+	step "Pin a version on the preview link"
+	survivor_check pin
 	step "Open tabs: {{previous}} frontend on the new backend"
 	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
 	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
@@ -270,9 +277,11 @@ rollback-rehearsal previous: test-up
 	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	step "Rolled back to {{previous}}, full e2e from that tag"
 	$compose -f "$old_both" up -d --no-build --no-deps --wait backend caddy
+	survivor_check rolled-back
 	(cd "$worktree/frontend" && full_e2e)
 	step "Rolled forward again"
 	$compose up -d --no-build --no-deps --wait backend caddy
+	survivor_check rolled-forward
 	(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor serving.e2e)
 	step "Rollback to {{previous}} and back holds"
 
