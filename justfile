@@ -225,26 +225,51 @@ test-quick: backend::test worker::proofs test-services frontend::test-unit
 rollback-rehearsal previous: test-up
 	#!/usr/bin/env bash
 	set -euo pipefail
+	caffeinate -i -w $$ &
 	compose="docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test"
 	worktree=$(mktemp -d)
-	override=$(mktemp)
+	old_frontend=$(mktemp)
+	old_both=$(mktemp)
 	cleanup() {
 		$compose down -v
 		git worktree remove --force "$worktree"
-		rm -f "$override"
+		rm -f "$old_frontend" "$old_both"
 	}
 	trap cleanup EXIT
+	step() {
+		printf '\n=== %s\n' "$1"
+	}
+	step "Building {{previous}}"
 	git worktree add -q --detach "$worktree" "{{previous}}"
 	git -C "$worktree" submodule update --init -q backend frontend worker
 	docker build -q -t "fortropp-rehearsal-backend:{{previous}}" \
 		--build-context site-config="$worktree/worker/site-config" \
 		--build-context metadata="$worktree" \
 		"$worktree/backend"
-	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$override"
-	$compose -f "$override" up -d --no-build --no-deps backend
 	ln -s "$PWD/frontend/node_modules" "$worktree/frontend/node_modules"
-	(cd "$worktree/frontend" && npx playwright test serving.e2e versions.e2e preview.e2e)
-	echo "{{previous}} runs on the current schema"
+	(cd "$worktree/frontend" && npm run build)
+	printf 'services:\n  caddy:\n    volumes:\n      - %s/frontend/build:/srv\n' "$worktree" > "$old_frontend"
+	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$old_both"
+	cat "$old_frontend" | tail -n +2 >> "$old_both"
+	e2e() {
+		npx playwright test --retries=1 "$@"
+	}
+	full_e2e() {
+		e2e --grep-invert @exclusive && e2e --grep @exclusive --workers=1
+	}
+	(cd frontend && npx playwright install)
+	step "New version, full e2e"
+	(cd frontend && full_e2e)
+	step "Open tabs: {{previous}} frontend on the new backend"
+	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
+	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
+	step "Rolled back to {{previous}}, full e2e from that tag"
+	$compose -f "$old_both" up -d --no-build --no-deps --wait backend caddy
+	(cd "$worktree/frontend" && full_e2e)
+	step "Rolled forward again"
+	$compose up -d --no-build --no-deps --wait backend caddy
+	(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor serving.e2e)
+	step "Rollback to {{previous}} and back holds"
 
 whoami:
 	@op whoami > /dev/null 2>&1 || { echo "No 1Password session: run op signin first"; exit 1; }
