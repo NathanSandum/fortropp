@@ -32,11 +32,13 @@ jobs:
           --secret id=sccache,env=SCCACHE_ENV
           --build-context site-config=worker/site-config
           --build-context metadata=.
+          --build-arg FORTROPP_VERSION="$VERSION"
           --tag "$REGISTRY/backend:$VERSION"
           backend
       - name: Build and push frontend
         run: >-
           docker buildx build --push --platform linux/amd64
           --file infra/production/frontend.Dockerfile
+          --build-arg FORTROPP_VERSION="$VERSION"
           --tag "$REGISTRY/frontend:$VERSION"
           .

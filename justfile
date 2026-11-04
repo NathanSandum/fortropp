@@ -229,11 +229,12 @@ rollback-rehearsal previous: test-up
 	compose="docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test"
 	worktree=$(mktemp -d)
 	old_frontend=$(mktemp)
+	old_backend=$(mktemp)
 	old_both=$(mktemp)
 	cleanup() {
 		$compose down -v
 		git worktree remove --force "$worktree"
-		rm -f "$old_frontend" "$old_both"
+		rm -f "$old_frontend" "$old_backend" "$old_both"
 	}
 	trap cleanup EXIT
 	step() {
@@ -249,7 +250,8 @@ rollback-rehearsal previous: test-up
 	ln -s "$PWD/frontend/node_modules" "$worktree/frontend/node_modules"
 	(cd "$worktree/frontend" && npm run build)
 	printf 'services:\n  caddy:\n    volumes:\n      - %s/frontend/build:/srv\n' "$worktree" > "$old_frontend"
-	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$old_both"
+	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$old_backend"
+	cat "$old_backend" > "$old_both"
 	cat "$old_frontend" | tail -n +2 >> "$old_both"
 	e2e() {
 		npx playwright test --retries=1 "$@"
@@ -262,6 +264,9 @@ rollback-rehearsal previous: test-up
 	(cd frontend && full_e2e)
 	step "Open tabs: {{previous}} frontend on the new backend"
 	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
+	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
+	step "Open tabs after a rollback: new frontend on the {{previous}} backend"
+	$compose -f "$old_backend" up -d --no-build --no-deps --wait backend caddy
 	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	step "Rolled back to {{previous}}, full e2e from that tag"
 	$compose -f "$old_both" up -d --no-build --no-deps --wait backend caddy
