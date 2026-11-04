@@ -222,6 +222,30 @@ test: test-up backend::test worker::proofs test-services frontend::test
 
 test-quick: backend::test worker::proofs test-services frontend::test-unit
 
+rollback-rehearsal previous: test-up
+	#!/usr/bin/env bash
+	set -euo pipefail
+	compose="docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test"
+	worktree=$(mktemp -d)
+	override=$(mktemp)
+	cleanup() {
+		$compose down -v
+		git worktree remove --force "$worktree"
+		rm -f "$override"
+	}
+	trap cleanup EXIT
+	git worktree add -q --detach "$worktree" "{{previous}}"
+	git -C "$worktree" submodule update --init -q backend frontend worker
+	docker build -q -t "fortropp-rehearsal-backend:{{previous}}" \
+		--build-context site-config="$worktree/worker/site-config" \
+		--build-context metadata="$worktree" \
+		"$worktree/backend"
+	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$override"
+	$compose -f "$override" up -d --no-build --no-deps backend
+	ln -s "$PWD/frontend/node_modules" "$worktree/frontend/node_modules"
+	(cd "$worktree/frontend" && npx playwright test serving.e2e versions.e2e preview.e2e)
+	echo "{{previous}} runs on the current schema"
+
 whoami:
 	@op whoami > /dev/null 2>&1 || { echo "No 1Password session: run op signin first"; exit 1; }
 
