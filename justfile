@@ -222,7 +222,7 @@ test: test-up backend::test worker::proofs test-services frontend::test
 
 test-quick: backend::test worker::proofs test-services frontend::test-unit
 
-rollback-rehearsal previous recovery="" old_ui_skip="no test has this name": test-up
+rollback-rehearsal previous recovery="" old_ui_skip="no test has this name" open_tabs="yes": test-up
 	#!/usr/bin/env bash
 	set -euo pipefail
 	caffeinate -i -w $$ &
@@ -269,15 +269,19 @@ rollback-rehearsal previous recovery="" old_ui_skip="no test has this name": tes
 	(cd frontend && full_e2e)
 	step "Pin a version on the preview link"
 	survivor_check pin
-	step "Open tabs: {{previous}} frontend on the new backend"
-	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
-	(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor --grep-invert "{{old_ui_skip}}")
-	step "Open tabs after a rollback: new frontend on the {{previous}} backend"
+	if [ "{{open_tabs}}" = "yes" ]; then
+		step "Open tabs: {{previous}} frontend on the new backend"
+		$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
+		(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor --grep-invert "{{old_ui_skip}}")
+	fi
 	if [ -n "{{recovery}}" ]; then
 		$compose exec -T postgres psql -v ON_ERROR_STOP=1 -U fortropp -d fortropp < "{{recovery}}"
 	fi
-	$compose -f "$old_backend" up -d --no-build --no-deps --wait backend caddy
-	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
+	if [ "{{open_tabs}}" = "yes" ]; then
+		step "Open tabs after a rollback: new frontend on the {{previous}} backend"
+		$compose -f "$old_backend" up -d --no-build --no-deps --wait backend caddy
+		(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
+	fi
 	step "Rolled back to {{previous}}, full e2e from that tag"
 	$compose -f "$old_both" up -d --no-build --no-deps --wait backend caddy
 	survivor_check rolled-back
