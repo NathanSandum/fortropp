@@ -271,7 +271,7 @@ rollback-rehearsal previous: test-up
 	survivor_check pin
 	step "Open tabs: {{previous}} frontend on the new backend"
 	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
-	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
+	(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	step "Open tabs after a rollback: new frontend on the {{previous}} backend"
 	$compose -f "$old_backend" up -d --no-build --no-deps --wait backend caddy
 	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
