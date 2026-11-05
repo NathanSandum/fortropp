@@ -222,7 +222,7 @@ test: test-up backend::test worker::proofs test-services frontend::test
 
 test-quick: backend::test worker::proofs test-services frontend::test-unit
 
-rollback-rehearsal previous: test-up
+rollback-rehearsal previous recovery="": test-up
 	#!/usr/bin/env bash
 	set -euo pipefail
 	caffeinate -i -w $$ &
@@ -273,6 +273,9 @@ rollback-rehearsal previous: test-up
 	$compose -f "$old_frontend" up -d --no-build --no-deps --wait caddy
 	(cd frontend && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	step "Open tabs after a rollback: new frontend on the {{previous}} backend"
+	if [ -n "{{recovery}}" ]; then
+		$compose exec -T postgres psql -v ON_ERROR_STOP=1 -U fortropp -d fortropp < "{{recovery}}"
+	fi
 	$compose -f "$old_backend" up -d --no-build --no-deps --wait backend caddy
 	(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	step "Rolled back to {{previous}}, full e2e from that tag"
