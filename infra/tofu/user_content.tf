@@ -29,6 +29,24 @@ resource "cloudflare_dns_record" "apex_test" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "www_test" {
+  zone_id = data.cloudflare_zone.user_content.zone_id
+  name    = "qs.apex.fortropp.app"
+  type    = "CNAME"
+  content = local.edge_hostname
+  proxied = true
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "challenge_test" {
+  zone_id = data.cloudflare_zone.user_content.zone_id
+  name    = "vc.apex.fortropp.app"
+  type    = "CNAME"
+  content = local.edge_hostname
+  proxied = true
+  ttl     = 1
+}
+
 resource "cloudflare_workers_route" "user_content" {
   zone_id = data.cloudflare_zone.user_content.zone_id
   pattern = "*/*"
