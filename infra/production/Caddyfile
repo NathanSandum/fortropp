@@ -1,4 +1,17 @@
+{
+	auto_https disable_redirects
+}
+
 fortropp.dev {
 	tls /etc/fortropp/origin.pem /etc/fortropp/origin-key.pem
 	import app-routes.caddy backend:8080
+}
+
+http:// {
+	handle /.well-known/cf-custom-hostname-challenge/* {
+		reverse_proxy backend:8080
+	}
+	handle {
+		abort
+	}
 }

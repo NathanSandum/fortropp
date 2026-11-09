@@ -171,6 +171,7 @@ services:
       WORKER_ADDRESS: worker:${WORKER_PORT:?}
     ports:
       - "${CADDY_PORT:?}:443"
+      - "${CADDY_HTTP_PORT:?}:80"
     healthcheck:
       test: ["CMD", "test", "-f", "/data/caddy/pki/authorities/local/root.crt"]
       interval: 2s

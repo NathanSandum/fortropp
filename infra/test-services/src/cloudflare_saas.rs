@@ -12,6 +12,25 @@ const UNAVAILABLE: u32 = 10001;
 const AWAITING_DNS: &str = "custom hostname does not CNAME to this zone.";
 
 #[derive(Clone)]
+struct Challenge {
+    id: String,
+    body: String,
+}
+
+impl Challenge {
+    fn fresh() -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            body: uuid::Uuid::new_v4().to_string(),
+        }
+    }
+
+    fn json(&self) -> Value {
+        json!({ "id": self.id, "body": self.body })
+    }
+}
+
+#[derive(Clone)]
 struct Record {
     id: String,
     hostname: String,
@@ -19,6 +38,8 @@ struct Record {
     ssl_status: String,
     verification_errors: Vec<String>,
     revalidations: u32,
+    lookups: u32,
+    challenge: Challenge,
 }
 
 impl Record {
@@ -30,11 +51,13 @@ impl Record {
             ssl_status: "pending_validation".to_string(),
             verification_errors: vec![AWAITING_DNS.to_string()],
             revalidations: 0,
+            lookups: 0,
+            challenge: Challenge::fresh(),
         }
     }
 
     fn json(&self) -> Value {
-        json!({
+        let mut record = json!({
             "id": self.id,
             "hostname": self.hostname,
             "status": self.status,
@@ -45,7 +68,22 @@ impl Record {
                 "method": "http",
                 "type": "dv",
             },
-        })
+        });
+        if let Some(fields) = record.as_object_mut()
+            && self.status == "pending"
+        {
+            fields.insert(
+                "ownership_verification_http".to_string(),
+                json!({
+                    "http_url": format!(
+                        "http://{}/.well-known/cf-custom-hostname-challenge/{}",
+                        self.hostname, self.challenge.id
+                    ),
+                    "http_body": self.challenge.body,
+                }),
+            );
+        }
+        record
     }
 }
 
@@ -132,12 +170,15 @@ async fn list(
     if let Some(refusal) = refused(&request, &state) {
         return refusal;
     }
-    let Some(hostnames) = locked(&state) else {
+    let Some(mut hostnames) = locked(&state) else {
         return poisoned();
     };
     let found: Vec<Value> = hostnames
-        .get(&query.hostname)
-        .map(Record::json)
+        .get_mut(&query.hostname)
+        .map(|record| {
+            record.lookups = record.lookups.saturating_add(1);
+            record.json()
+        })
         .into_iter()
         .collect();
     HttpResponse::Ok().json(json!({
@@ -238,6 +279,37 @@ async fn revalidations(path: web::Path<String>, state: web::Data<State>) -> Http
     HttpResponse::Ok().json(json!({ "count": count }))
 }
 
+async fn lookups(path: web::Path<String>, state: web::Data<State>) -> HttpResponse {
+    let Some(hostnames) = locked(&state) else {
+        return poisoned();
+    };
+    let count = hostnames
+        .get(&path.into_inner())
+        .map_or(0, |hostname| hostname.lookups);
+    HttpResponse::Ok().json(json!({ "count": count }))
+}
+
+async fn challenge(path: web::Path<String>, state: web::Data<State>) -> HttpResponse {
+    let Some(hostnames) = locked(&state) else {
+        return poisoned();
+    };
+    hostnames.get(&path.into_inner()).map_or_else(
+        || HttpResponse::NotFound().finish(),
+        |hostname| HttpResponse::Ok().json(hostname.challenge.json()),
+    )
+}
+
+async fn replace_challenge(path: web::Path<String>, state: web::Data<State>) -> HttpResponse {
+    let Some(mut hostnames) = locked(&state) else {
+        return poisoned();
+    };
+    let Some(hostname) = hostnames.get_mut(&path.into_inner()) else {
+        return HttpResponse::NotFound().finish();
+    };
+    hostname.challenge = Challenge::fresh();
+    HttpResponse::Ok().json(hostname.challenge.json())
+}
+
 #[derive(Deserialize)]
 struct SetBody {
     status: String,
@@ -315,6 +387,12 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     .route(
         "/fake/revalidations/{hostname}",
         web::get().to(revalidations),
+    )
+    .route("/fake/lookups/{hostname}", web::get().to(lookups))
+    .route("/fake/challenges/{hostname}", web::get().to(challenge))
+    .route(
+        "/fake/challenges/{hostname}",
+        web::put().to(replace_challenge),
     )
     .route("/fake/rejections/{hostname}", web::put().to(reject))
     .route("/fake/outage", web::put().to(outage))
