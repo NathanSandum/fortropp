@@ -128,31 +128,6 @@ prod-hostnames +hostnames: whoami
 				end'
 	done
 
-prod-hostname-challenge hostname: whoami
-	#!/usr/bin/env bash
-	set -euo pipefail
-	zone=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -raw cloudflare_hostnames_zone_id)
-	token=$(op read op://fortropp/backend-prod/CLOUDFLARE_HOSTNAMES_TOKEN)
-	curl -sS -G --data-urlencode "hostname.exact={{hostname}}" \
-		-H @<(printf 'Authorization: Bearer %s\n' "$token") \
-		"https://api.cloudflare.com/client/v4/zones/$zone/custom_hostnames" \
-		| jq -r '.result[0] | "url: \(.ownership_verification_http.http_url)", "body: \(.ownership_verification_http.http_body)"'
-
-prod-hostname-recheck hostname: whoami
-	#!/usr/bin/env bash
-	set -euo pipefail
-	zone=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -raw cloudflare_hostnames_zone_id)
-	token=$(op read op://fortropp/backend-prod/CLOUDFLARE_HOSTNAMES_TOKEN)
-	id=$(curl -sS -G --data-urlencode "hostname.exact={{hostname}}" \
-		-H @<(printf 'Authorization: Bearer %s\n' "$token") \
-		"https://api.cloudflare.com/client/v4/zones/$zone/custom_hostnames" \
-		| jq -r '.result[0].id')
-	curl -sS -X PATCH -H 'Content-Type: application/json' \
-		-H @<(printf 'Authorization: Bearer %s\n' "$token") \
-		--data '{"ssl":{"method":"http","type":"dv"}}' \
-		"https://api.cloudflare.com/client/v4/zones/$zone/custom_hostnames/$id" \
-		| jq -r 'if .success then "{{hostname}}: hostname \(.result.status), certificate \(.result.ssl.status // "none")" else "recheck failed: \(.errors | map("\(.message) (\(.code))") | join("; "))" end'
-
 cloudflare-contract commit:
 	#!/usr/bin/env bash
 	set -euo pipefail
