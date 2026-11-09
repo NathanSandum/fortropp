@@ -13,5 +13,7 @@ header /oauth/* {
 
 handle {
 	root * /srv
+	@website path_regexp ^/dashboard/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+	rewrite @website /fallback.html
 	file_server
 }
