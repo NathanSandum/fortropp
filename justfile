@@ -110,7 +110,7 @@ prod-hostnames +hostnames: whoami
 	#!/usr/bin/env bash
 	set -euo pipefail
 	zone=$(cd infra/tofu && op run --no-masking --env-file .env.tpl -- tofu output -raw cloudflare_hostnames_zone_id)
-	token=$(op read op://fortropp/backend-prod/CLOUDFLARE_HOSTNAMES_TOKEN)
+	token=$(op read op://fortropp/backend-prod/CLOUDFLARE_API_TOKEN)
 	for hostname in {{hostnames}}; do
 		curl -sS -G --data-urlencode "hostname.exact=$hostname" \
 			-H @<(printf 'Authorization: Bearer %s\n' "$token") \

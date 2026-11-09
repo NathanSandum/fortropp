@@ -42,7 +42,6 @@ services:
       S3_SECRET_KEY: fortropp-worker-s3-secret
       S3_REGION: auto
       KV_API_URL: http://localhost:${WORKER_PORT:?}/cdn-cgi/local/explorer/api
-      KV_API_TOKEN: local
       KV_NAMESPACE_ID: fortropp-site-routes-e2e
       POSTMARK_API_URL: http://postmark:8080
       POSTMARK_SERVER_TOKEN: ${POSTMARK_TOKEN:?}
@@ -61,7 +60,7 @@ services:
       USER_CONTENT_DOMAIN: fortropp.test
       PREVIEW_PORT: ${CADDY_PORT:?}
       CLOUDFLARE_HOSTNAMES_API_URL: http://cloudflare-saas:8080/client/v4
-      CLOUDFLARE_HOSTNAMES_TOKEN: ${CLOUDFLARE_SAAS_TOKEN:?}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_SAAS_TOKEN:?}
       CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-test-zone
     depends_on:
       postgres:
