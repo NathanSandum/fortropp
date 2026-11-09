@@ -21,7 +21,7 @@ services:
     image: code.forgejo.org/forgejo/runner:13
     user: "0:0"
     environment:
-      FORGEJO_RUNNER_TOKEN: ${FORGEJO_RUNNER_TOKEN:-}
+      FORGEJO_RUNNER_TOKEN:
     command:
       - sh
       - -c

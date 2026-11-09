@@ -105,10 +105,12 @@ struct MailpitMessage {
     from: Mailbox,
     to: Vec<Mailbox>,
     reply_to: Vec<Mailbox>,
-    subject: String,
-    text: String,
-    #[serde(rename = "HTML")]
-    html: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    subject: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[serde(rename = "HTML", skip_serializing_if = "Option::is_none")]
+    html: Option<String>,
     tags: Vec<String>,
 }
 
@@ -120,11 +122,12 @@ impl MailpitMessage {
             reply_to: body
                 .reply_to
                 .as_deref()
-                .map(Mailbox::list)
-                .unwrap_or_default(),
-            subject: body.subject.unwrap_or_default(),
-            text: body.text_body.unwrap_or_default(),
-            html: body.html_body.unwrap_or_default(),
+                .into_iter()
+                .flat_map(Mailbox::list)
+                .collect(),
+            subject: body.subject,
+            text: body.text_body,
+            html: body.html_body,
             tags: vec![stream],
         }
     }
@@ -248,12 +251,14 @@ async fn deliver(mailpit: &str, message: &MailpitMessage) -> Result<(), String> 
     if response.status().is_success() {
         return Ok(());
     }
-    let body = response.body().await.unwrap_or_default();
-    Err(format!(
-        "Mailpit answered {}: {}",
-        response.status(),
-        String::from_utf8_lossy(&body)
-    ))
+    let status = response.status();
+    Err(match response.body().await {
+        Ok(body) => format!(
+            "Mailpit answered {status}: {}",
+            String::from_utf8_lossy(&body)
+        ),
+        Err(error) => format!("Mailpit answered {status}, body unreadable: {error}"),
+    })
 }
 
 async fn send(

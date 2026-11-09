@@ -142,10 +142,8 @@ services:
     build: ../worker
     restart: unless-stopped
     environment:
-      WRANGLER_LOCAL: ${WRANGLER_LOCAL:-true}
+      WRANGLER_PORT: 8787
       USER_CONTENT_DOMAIN: fortropp.test
-      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
-      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
     ports:
       - "8787:8787"
       - "127.0.0.1:8080:8080"

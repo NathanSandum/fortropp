@@ -2,3 +2,8 @@ allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-panic-in-tests = true
 allow-indexing-slicing-in-tests = true
+
+disallowed-methods = [
+    { path = "core::option::Option::unwrap_or_default", reason = "absence is a decision: keep the Option, return an error, or iterate it" },
+    { path = "core::result::Result::unwrap_or_default", reason = "a failure is a decision: propagate it or handle it explicitly" },
+]
