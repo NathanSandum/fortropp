@@ -15,7 +15,8 @@ http://localhost:5555 {
 }
 
 http:// {
-	handle /.well-known/cf-custom-hostname-challenge/* {
+	@challenges path /.well-known/cf-custom-hostname-challenge/* /.well-known/acme-challenge/* /.well-known/pki-validation/*
+	handle @challenges {
 		reverse_proxy worker:8080
 	}
 	handle {

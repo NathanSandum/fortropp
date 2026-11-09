@@ -13,20 +13,37 @@ const AWAITING_DNS: &str = "custom hostname does not CNAME to this zone.";
 
 #[derive(Clone)]
 struct Challenge {
-    id: String,
+    path: String,
     body: String,
 }
 
 impl Challenge {
-    fn fresh() -> Self {
+    fn ownership() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            path: format!(
+                "/.well-known/cf-custom-hostname-challenge/{}",
+                uuid::Uuid::new_v4()
+            ),
+            body: uuid::Uuid::new_v4().to_string(),
+        }
+    }
+
+    fn certificate() -> Self {
+        Self {
+            path: format!("/.well-known/pki-validation/{}.txt", uuid::Uuid::new_v4()),
             body: uuid::Uuid::new_v4().to_string(),
         }
     }
 
     fn json(&self) -> Value {
-        json!({ "id": self.id, "body": self.body })
+        json!({ "path": self.path, "body": self.body })
+    }
+
+    fn http(&self, hostname: &str) -> Value {
+        json!({
+            "http_url": format!("http://{hostname}{}", self.path),
+            "http_body": self.body,
+        })
     }
 }
 
@@ -39,7 +56,8 @@ struct Record {
     verification_errors: Vec<String>,
     revalidations: u32,
     lookups: u32,
-    challenge: Challenge,
+    ownership: Challenge,
+    certificate: Challenge,
 }
 
 impl Record {
@@ -52,35 +70,43 @@ impl Record {
             verification_errors: vec![AWAITING_DNS.to_string()],
             revalidations: 0,
             lookups: 0,
-            challenge: Challenge::fresh(),
+            ownership: Challenge::ownership(),
+            certificate: Challenge::certificate(),
         }
     }
 
+    fn challenges(&self) -> Value {
+        json!({ "ownership": self.ownership.json(), "certificate": self.certificate.json() })
+    }
+
     fn json(&self) -> Value {
+        let mut ssl = json!({
+            "id": self.id,
+            "status": self.ssl_status,
+            "method": "http",
+            "type": "dv",
+        });
+        if let Some(fields) = ssl.as_object_mut()
+            && self.ssl_status == "pending_validation"
+        {
+            fields.insert(
+                "validation_records".to_string(),
+                json!([self.certificate.http(&self.hostname)]),
+            );
+        }
         let mut record = json!({
             "id": self.id,
             "hostname": self.hostname,
             "status": self.status,
             "verification_errors": self.verification_errors,
-            "ssl": {
-                "id": self.id,
-                "status": self.ssl_status,
-                "method": "http",
-                "type": "dv",
-            },
+            "ssl": ssl,
         });
         if let Some(fields) = record.as_object_mut()
             && self.status == "pending"
         {
             fields.insert(
                 "ownership_verification_http".to_string(),
-                json!({
-                    "http_url": format!(
-                        "http://{}/.well-known/cf-custom-hostname-challenge/{}",
-                        self.hostname, self.challenge.id
-                    ),
-                    "http_body": self.challenge.body,
-                }),
+                self.ownership.http(&self.hostname),
             );
         }
         record
@@ -295,7 +321,7 @@ async fn challenge(path: web::Path<String>, state: web::Data<State>) -> HttpResp
     };
     hostnames.get(&path.into_inner()).map_or_else(
         || HttpResponse::NotFound().finish(),
-        |hostname| HttpResponse::Ok().json(hostname.challenge.json()),
+        |hostname| HttpResponse::Ok().json(hostname.challenges()),
     )
 }
 
@@ -306,8 +332,9 @@ async fn replace_challenge(path: web::Path<String>, state: web::Data<State>) -> 
     let Some(hostname) = hostnames.get_mut(&path.into_inner()) else {
         return HttpResponse::NotFound().finish();
     };
-    hostname.challenge = Challenge::fresh();
-    HttpResponse::Ok().json(hostname.challenge.json())
+    hostname.ownership = Challenge::ownership();
+    hostname.certificate = Challenge::certificate();
+    HttpResponse::Ok().json(hostname.challenges())
 }
 
 #[derive(Deserialize)]
