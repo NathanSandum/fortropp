@@ -54,6 +54,7 @@ services:
       COOKIE_SECURE: "true"
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: edge.fortropp.test
+      ORIGIN_IPV4: 192.0.2.1
       DOMAIN_VERIFICATION_KEY: fortropp-dev-domain-verification-key
       SESSION_KEY: 49d7db009eea2a720bf81d94a6caaae704206a2f3d6dafa2f515144d5019f61628e85622ca8de56e2bfc9d6c354a6278c6d25d62ae0bb3c7e5344e2cd2752924
       SIGNUP: open

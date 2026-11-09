@@ -113,9 +113,42 @@ impl Record {
     }
 }
 
+#[derive(Clone, Deserialize)]
+struct DnsRecord {
+    #[serde(skip_deserializing)]
+    id: String,
+    name: String,
+    #[serde(rename = "type")]
+    kind: String,
+    content: String,
+    ttl: u32,
+    proxied: bool,
+}
+
+impl DnsRecord {
+    fn json(&self) -> Value {
+        json!({
+            "id": self.id,
+            "name": self.name,
+            "type": self.kind,
+            "content": self.content,
+            "ttl": self.ttl,
+            "proxied": self.proxied,
+            "proxiable": true,
+            "settings": {},
+            "meta": {},
+            "comment": "",
+            "tags": [],
+            "created_on": "2026-01-01T00:00:00Z",
+            "modified_on": "2026-01-01T00:00:00Z",
+        })
+    }
+}
+
 pub struct State {
     token: String,
     hostnames: Mutex<BTreeMap<String, Record>>,
+    dns_records: Mutex<BTreeMap<String, DnsRecord>>,
     rejections: Mutex<BTreeMap<String, String>>,
     outage: AtomicBool,
 }
@@ -126,6 +159,7 @@ impl State {
         web::Data::new(Self {
             token,
             hostnames: Mutex::new(BTreeMap::new()),
+            dns_records: Mutex::new(BTreeMap::new()),
             rejections: Mutex::new(BTreeMap::new()),
             outage: AtomicBool::new(false),
         })
@@ -185,7 +219,24 @@ fn poisoned() -> HttpResponse {
 #[derive(Deserialize)]
 struct ListQuery {
     #[serde(rename = "hostname.exact")]
-    hostname: String,
+    hostname: Option<String>,
+    hostname_status: Option<String>,
+}
+
+fn page(found: &[Value]) -> HttpResponse {
+    HttpResponse::Ok().json(json!({
+        "success": true,
+        "errors": [],
+        "messages": [],
+        "result": found,
+        "result_info": {
+            "page": 1,
+            "per_page": 1000,
+            "count": found.len(),
+            "total_count": found.len(),
+            "total_pages": usize::from(!found.is_empty()),
+        },
+    }))
 }
 
 async fn list(
@@ -199,27 +250,128 @@ async fn list(
     let Some(mut hostnames) = locked(&state) else {
         return poisoned();
     };
-    let found: Vec<Value> = hostnames
-        .get_mut(&query.hostname)
-        .map(|record| {
-            record.lookups = record.lookups.saturating_add(1);
-            record.json()
+    let query = query.into_inner();
+    let found: Vec<Value> = match query.hostname {
+        Some(hostname) => hostnames
+            .get_mut(&hostname)
+            .map(|record| {
+                record.lookups = record.lookups.saturating_add(1);
+                record.json()
+            })
+            .into_iter()
+            .collect(),
+        None => hostnames
+            .values()
+            .filter(|record| {
+                query
+                    .hostname_status
+                    .as_ref()
+                    .is_none_or(|status| &record.status == status)
+            })
+            .map(Record::json)
+            .collect(),
+    };
+    page(&found)
+}
+
+#[derive(Deserialize)]
+struct DnsListQuery {
+    #[serde(rename = "type")]
+    kind: Option<String>,
+    #[serde(rename = "name.endswith")]
+    name_endswith: Option<String>,
+    #[serde(rename = "name.exact")]
+    name_exact: Option<String>,
+}
+
+fn dns_locked(state: &State) -> Option<std::sync::MutexGuard<'_, BTreeMap<String, DnsRecord>>> {
+    state.dns_records.lock().ok()
+}
+
+async fn dns_list(
+    request: HttpRequest,
+    query: web::Query<DnsListQuery>,
+    state: web::Data<State>,
+) -> HttpResponse {
+    if let Some(refusal) = refused(&request, &state) {
+        return refusal;
+    }
+    let Some(records) = dns_locked(&state) else {
+        return poisoned();
+    };
+    let found: Vec<Value> = records
+        .values()
+        .filter(|record| query.kind.as_ref().is_none_or(|kind| &record.kind == kind))
+        .filter(|record| {
+            query
+                .name_endswith
+                .as_ref()
+                .is_none_or(|suffix| record.name.ends_with(suffix.as_str()))
         })
-        .into_iter()
+        .filter(|record| {
+            query
+                .name_exact
+                .as_ref()
+                .is_none_or(|name| &record.name == name)
+        })
+        .map(DnsRecord::json)
         .collect();
-    HttpResponse::Ok().json(json!({
-        "success": true,
-        "errors": [],
-        "messages": [],
-        "result": found,
-        "result_info": {
-            "page": 1,
-            "per_page": 20,
-            "count": found.len(),
-            "total_count": found.len(),
-            "total_pages": usize::from(!found.is_empty()),
-        },
-    }))
+    page(&found)
+}
+
+async fn dns_create(
+    request: HttpRequest,
+    body: web::Json<DnsRecord>,
+    state: web::Data<State>,
+) -> HttpResponse {
+    if let Some(refusal) = refused(&request, &state) {
+        return refusal;
+    }
+    let Some(mut records) = dns_locked(&state) else {
+        return poisoned();
+    };
+    let mut record = body.into_inner();
+    record.id = uuid::Uuid::new_v4().simple().to_string();
+    let result = record.json();
+    records.insert(record.id.clone(), record);
+    envelope(&result)
+}
+
+async fn dns_delete(
+    request: HttpRequest,
+    path: web::Path<(String, String)>,
+    state: web::Data<State>,
+) -> HttpResponse {
+    if let Some(refusal) = refused(&request, &state) {
+        return refusal;
+    }
+    let Some(mut records) = dns_locked(&state) else {
+        return poisoned();
+    };
+    let (_, id) = path.into_inner();
+    if records.remove(&id).is_none() {
+        return failure(81044, "Record does not exist.");
+    }
+    envelope(&json!({ "id": id }))
+}
+
+async fn dns_records(state: web::Data<State>) -> HttpResponse {
+    let Some(records) = dns_locked(&state) else {
+        return poisoned();
+    };
+    let all: Vec<Value> = records
+        .values()
+        .map(|record| {
+            json!({
+                "name": record.name,
+                "type": record.kind,
+                "content": record.content,
+                "ttl": record.ttl,
+                "proxied": record.proxied,
+            })
+        })
+        .collect();
+    HttpResponse::Ok().json(all)
 }
 
 #[derive(Deserialize)]
@@ -415,6 +567,19 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         "/fake/revalidations/{hostname}",
         web::get().to(revalidations),
     )
+    .route(
+        "/client/v4/zones/{zone}/dns_records",
+        web::get().to(dns_list),
+    )
+    .route(
+        "/client/v4/zones/{zone}/dns_records",
+        web::post().to(dns_create),
+    )
+    .route(
+        "/client/v4/zones/{zone}/dns_records/{id}",
+        web::delete().to(dns_delete),
+    )
+    .route("/fake/dns_records", web::get().to(dns_records))
     .route("/fake/lookups/{hostname}", web::get().to(lookups))
     .route("/fake/challenges/{hostname}", web::get().to(challenge))
     .route(

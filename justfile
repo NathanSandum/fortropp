@@ -56,6 +56,7 @@ prod-secrets:
 			["KV_API_URL", "kv_api_url"],
 			["KV_NAMESPACE_ID", "kv_namespace_id"],
 			["CLOUDFLARE_HOSTNAMES_ZONE_ID", "cloudflare_hostnames_zone_id"],
+			["ORIGIN_IPV4", "deploy_host"],
 			["TURNSTILE_SITEKEY", "turnstile_sitekey"],
 			["TURNSTILE_SECRET", "turnstile_secret"]
 		][] as [$env, $name]

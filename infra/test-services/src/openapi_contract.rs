@@ -4,7 +4,14 @@ use thiserror::Error;
 const MAX_DEPTH: usize = 64;
 const SCHEMA_PREFIX: &str = "#/components/schemas/";
 const RESPONSES: [&str; 2] = ["200", "4XX"];
-const OPERATIONS: [(&str, &str, &str); 4] = [
+const OPERATIONS: [(&str, &str, &str); 7] = [
+    ("dns_list", "/zones/{zone_id}/dns_records", "get"),
+    ("dns_create", "/zones/{zone_id}/dns_records", "post"),
+    (
+        "dns_delete",
+        "/zones/{zone_id}/dns_records/{dns_record_id}",
+        "delete",
+    ),
     ("list", "/zones/{zone_id}/custom_hostnames", "get"),
     ("create", "/zones/{zone_id}/custom_hostnames", "post"),
     (
