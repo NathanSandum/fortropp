@@ -29,6 +29,8 @@ services:
       additional_contexts:
         site-config: ../worker/site-config
         metadata: ..
+      args:
+        CARGO_FEATURES: test-routes
     network_mode: "service:worker"
     environment:
       RUST_LOG: backend=debug,info

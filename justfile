@@ -247,6 +247,7 @@ rollback-rehearsal previous recovery="" old_ui_skip="no test has this name" open
 	git worktree add -q --detach "$worktree" "{{previous}}"
 	git -C "$worktree" submodule update --init -q backend frontend worker
 	docker build -q -t "fortropp-rehearsal-backend:{{previous}}" \
+		--build-arg CARGO_FEATURES=test-routes \
 		--build-context site-config="$worktree/worker/site-config" \
 		--build-context metadata="$worktree" \
 		"$worktree/backend"

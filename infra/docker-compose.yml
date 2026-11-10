@@ -31,6 +31,8 @@ services:
       additional_contexts:
         site-config: ../worker/site-config
         metadata: ..
+      args:
+        CARGO_FEATURES: test-routes
     restart: unless-stopped
     network_mode: "service:worker"
     environment:
