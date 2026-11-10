@@ -265,6 +265,11 @@ rollback-rehearsal previous recovery="" old_ui_skip="no test has this name" open
 	survivor_check() {
 		(cd frontend && REHEARSAL_STEP="$1" REHEARSAL_STATE="$survivor" e2e rehearsal_pinned_preview)
 	}
+	restart_worker() {
+		$compose restart worker
+		$compose up -d --no-build --no-deps --wait worker
+		$compose restart backend
+	}
 	(cd frontend && npx playwright install)
 	step "New version, full e2e"
 	(cd frontend && full_e2e)
@@ -284,6 +289,7 @@ rollback-rehearsal previous recovery="" old_ui_skip="no test has this name" open
 		(cd "$worktree/frontend" && e2e publish_ui versions.e2e preview.e2e site_config_editor)
 	fi
 	step "Rolled back to {{previous}}, full e2e from that tag"
+	restart_worker
 	$compose -f "$old_both" up -d --no-build --no-deps --wait backend caddy
 	survivor_check rolled-back
 	(cd "$worktree/frontend" && full_e2e)
