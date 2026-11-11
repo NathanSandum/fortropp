@@ -67,6 +67,7 @@ services:
       CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-dev-zone
       STRIPE_API_URL: https://api.stripe.com
       STRIPE_SECRET_KEY:
+      STRIPE_PUBLISHABLE_KEY:
     depends_on:
       postgres:
         condition: service_healthy

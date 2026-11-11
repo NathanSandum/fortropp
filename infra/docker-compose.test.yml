@@ -66,6 +66,7 @@ services:
       CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-test-zone
       STRIPE_API_URL: https://stripe.fortropp.test
       STRIPE_SECRET_KEY: sk_test_fortropp
+      STRIPE_PUBLISHABLE_KEY: pk_test_fortropp
       SSL_CERT_DIR: /etc/ssl/certs:/stripe-ca/caddy/pki/authorities/local
     volumes:
       - stripe_ca:/stripe-ca:ro
