@@ -64,7 +64,14 @@ services:
       CLOUDFLARE_HOSTNAMES_API_URL: http://cloudflare-saas:8080/client/v4
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_SAAS_TOKEN:?}
       CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-test-zone
+      STRIPE_API_URL: https://stripe.fortropp.test
+      STRIPE_SECRET_KEY: sk_test_fortropp
+      SSL_CERT_DIR: /etc/ssl/certs:/stripe-ca/caddy/pki/authorities/local
+    volumes:
+      - stripe_ca:/stripe-ca:ro
     depends_on:
+      stripe:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
@@ -103,6 +110,34 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  stripe-mock:
+    image: stripe/stripe-mock:v0.206.0
+    command: ["-http-port", "12111"]
+
+  stripe:
+    image: caddy:2.11.4
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - https://stripe.fortropp.test
+      - --to
+      - stripe-mock:12111
+      - --internal-certs
+    volumes:
+      - stripe_ca:/data
+    networks:
+      default:
+        aliases:
+          - stripe.fortropp.test
+    depends_on:
+      - stripe-mock
+    healthcheck:
+      test: ["CMD", "test", "-f", "/data/caddy/certificates/local/stripe.fortropp.test/stripe.fortropp.test.crt"]
       interval: 2s
       timeout: 5s
       retries: 30
@@ -186,3 +221,4 @@ services:
 
 volumes:
   echo_certificate:
+  stripe_ca:

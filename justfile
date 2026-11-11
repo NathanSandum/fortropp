@@ -3,7 +3,7 @@ mod frontend
 mod worker
 
 dev-up: dev-down build
-	docker compose -f infra/docker-compose.yml up -d --build
+	op run --env-file infra/backend-dev.env.tpl -- docker compose -f infra/docker-compose.yml up -d --build
 	just dev-dns
 
 tofu := "cd infra/tofu && op run --env-file .env.tpl -- tofu"

@@ -65,6 +65,8 @@ services:
       CLOUDFLARE_HOSTNAMES_API_URL: http://cloudflare-saas:8080/client/v4
       CLOUDFLARE_API_TOKEN: fortropp-dev-cloudflare
       CLOUDFLARE_HOSTNAMES_ZONE_ID: fortropp-dev-zone
+      STRIPE_API_URL: https://api.stripe.com
+      STRIPE_SECRET_KEY:
     depends_on:
       postgres:
         condition: service_healthy
