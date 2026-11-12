@@ -1,0 +1,43 @@
+- [Session handoff](project_handoff.md) — read docs/handoff.md "Start here" first; 2026-11-09: prod on v2026.11.09.2; 2026-11-10: billing design done in todo_list.md, next is building it
+- [User-facing wording](feedback_user_facing_wording.md) — no docs or UI copy without showing it first; an answer to one question doesn't approve the rest of a plan
+- [Typed JSON](feedback_typed_json.md) — no ad-hoc json! in production code; serializable types so the shapes are auditable
+- [Derive from failure modes](feedback_derive_from_failure_modes.md) — no timers/thresholds/broad sweeps without a named failure; prefer exact, existing-state designs
+- [External source of truth for settings](feedback_external_source_of_truth.md) — externally-owned WebsiteSettings fields query/mutate the external system directly, no DB cache
+- [Users first](feedback_users_first_priority.md) — functionality first, hardening last; defer what only matters once there are users
+- [Every resource is capped](project_every_resource_capped.md) — design caps into every new resource; only leniency is open
+- [Discuss product decisions first](feedback_discuss_product_decisions.md) — no unasked UX flows, tabs, or entity-cardinality choices
+- [Questions are not instructions](feedback_questions_are_not_instructions.md) — answer, then wait; never stash/revert/change the tree because of a question
+- ["Continue" is not approval](feedback_continue_is_not_approval.md) — resent/bare "continue" never approves releases, tags, deploys, pushes
+- [Confirm weighty actions](feedback_weighty_actions_confirm.md) — publish/rollback-style actions get a confirm dialog, never instant one-click
+- [SettingWrite invariant](project_setting_write_invariant.md) — frontend settings writes only via SettingWriteButton or confirmThen
+- [Button taxonomy](project_button_taxonomy.md) — buttons only via custom/Button roles, never ui/button directly
+- [PR vs direct merge](feedback_pr_vs_merge.md) — verified small changes merge straight to default branch; PRs only for large reviews
+- [No commit attribution](feedback_no_commit_attribution.md) — never add Co-Authored-By/Claude trailers
+- [No invented placeholders](feedback_no_invented_placeholders.md) — placeholders are plain field names ("Key Name"), never made-up examples
+- [Use shadcn components everywhere](feedback_use_shadcn.md) — no raw button/input in the frontend
+- [Use cargo add](feedback_cargo_add.md) — never hand-write dependency versions; stale model memory picks old releases
+- [Use Edit/Write, not Bash scripts](feedback_use_edit_tools.md) — never python/sed for file edits
+- [One edit at a time](feedback_one_edit_at_a_time.md) — never batch parallel edits; a rejection must stop the rest
+- [Dev environment](project_dev_environment.md) — HTTPS dev stack, dev CA for Claude Code, fortropp-dev MCP, Vite proxy, GitHub repos
+- [Never print credential files](feedback_never_print_credential_files.md) — no contents of .env/CLI configs even "redacted"; check field presence only
+- [No explanatory comments](feedback_no_comments.md) — keep fortropp code/SQL comment-free
+- [Fish shell](user_fish_shell.md) — user pastes into fish; bash-shaped commands go in a scratchpad script run with `bash`
+- [New to Cloudflare Workers](user_cloudflare_workers_new.md) — explain CF concepts; working-first for dev-worker changes
+- [Tests assert equality](feedback_tests_assert_equality.md) — unit tests compare the whole outcome, never "contains" checks
+- [Destructive steps last](feedback_destructive_last.md) — renames/removals at the end of a plan, after the real work
+- [Minimal, verified worker](project_minimal_verified_worker.md) — worker does only what it must; move work to R2/backend; verify before prod; test-stack limits never justify weaker design
+- [Monadic = abstract, reified](feedback_monadic_meaning.md) — worker flow: abstract spec reified by interpreters; Rust stays plain/idiomatic, no async-for-syntax, no crates
+- [Category-theory interest](user_category_theory_interest.md) — rigorous diagrams/functors idea, deferred for fortropp 2026-10-21
+- [Viking logo](project_viking_logo.md) — paused 2026-10-28 at CC; frontend/design/viking-cc.svg + logo-lab; user's design direction
+- [Design iteration](feedback_design_iteration.md) — features aren't emotions; ask before theorizing; shape before texture
+- [Metadata vs config](project_metadata_vs_config.md) — metadata.toml = product facts (name); deployment config flows tofu → backend → frontend
+- [TOML, never JSON](feedback_toml_not_json.md) — config/metadata files we author are TOML; JSON only where an external API dictates it
+- [Pin only user decisions](feedback_pin_only_user_decisions.md) — docs record only what the user decided; LLM suggestions are open options, never constraints
+- [Declarative todo list](feedback_todo_declarative.md) — todo_list.md holds decided plans only, no discussion or reasoning trails
+- [Pre-launch rollback isn't a design input](feedback_prelaunch_rollback_not_a_design_input.md) — design for the end state; launch rebuild collapses migrations
+- [Repair tasks after launch](project_repair_tasks_after_launch.md) — skipping them for far rollbacks is pre-launch only; after launch such releases need one
+- [Paid plans at launch](project_paid_plans_at_launch.md) — already decided; free limits are dev-only, don't pitch upgrading
+- [No competitor names](project_no_competitor_names.md) — keep Cloudflare out of user-facing copy; neutral wording, exceptions need a reason
+- [No manufactured defaults](feedback_no_manufactured_defaults.md) — no unwrap_or_default / Default standing in for missing data; Option or error instead
+- [No reasoning from names](feedback_no_reasoning_from_names.md) — never argue a design from what a page/route name suggests; check what it actually does
+- [fortropp settings architecture](project_fortropp_settings_architecture.md) — `public` field moving from DB bool to Cloudflare-R2-backed `ExternalSettings` abstraction
