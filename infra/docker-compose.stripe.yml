@@ -1,0 +1,6 @@
+services:
+  backend:
+    environment:
+      STRIPE_API_URL: https://api.stripe.com
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:?}
