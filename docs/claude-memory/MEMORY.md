@@ -1,4 +1,4 @@
-- [Session handoff](project_handoff.md) — read docs/handoff.md "Start here" first; 2026-11-09: prod on v2026.11.09.2; 2026-11-10: billing design done in todo_list.md, next is building it
+- [Session handoff](project_handoff.md) — read docs/handoff.md "Start here" first; 2026-11-09: prod on v2026.11.09.2; 2026-11-15: billing emails done on unpushed `billing` branches; next changing the card
 - [User-facing wording](feedback_user_facing_wording.md) — no docs or UI copy without showing it first; an answer to one question doesn't approve the rest of a plan
 - [Typed JSON](feedback_typed_json.md) — no ad-hoc json! in production code; serializable types so the shapes are auditable
 - [Derive from failure modes](feedback_derive_from_failure_modes.md) — no timers/thresholds/broad sweeps without a named failure; prefer exact, existing-state designs
@@ -38,6 +38,7 @@
 - [Repair tasks after launch](project_repair_tasks_after_launch.md) — skipping them for far rollbacks is pre-launch only; after launch such releases need one
 - [Paid plans at launch](project_paid_plans_at_launch.md) — already decided; free limits are dev-only, don't pitch upgrading
 - [No competitor names](project_no_competitor_names.md) — keep Cloudflare out of user-facing copy; neutral wording, exceptions need a reason
+- [No information from absence](feedback_no_information_from_absence.md) — missing data stays unsaid; never infer a cause from a null
 - [No manufactured defaults](feedback_no_manufactured_defaults.md) — no unwrap_or_default / Default standing in for missing data; Option or error instead
 - [No reasoning from names](feedback_no_reasoning_from_names.md) — never argue a design from what a page/route name suggests; check what it actually does
 - [fortropp settings architecture](project_fortropp_settings_architecture.md) — `public` field moving from DB bool to Cloudflare-R2-backed `ExternalSettings` abstraction
