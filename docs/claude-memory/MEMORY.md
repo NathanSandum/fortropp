@@ -38,6 +38,7 @@
 - [Repair tasks after launch](project_repair_tasks_after_launch.md) — skipping them for far rollbacks is pre-launch only; after launch such releases need one
 - [Paid plans at launch](project_paid_plans_at_launch.md) — already decided; free limits are dev-only, don't pitch upgrading
 - [No competitor names](project_no_competitor_names.md) — keep Cloudflare out of user-facing copy; neutral wording, exceptions need a reason
+- [Copy states facts](feedback_copy_states_facts.md) — say what will happen; never expose internal rules or thresholds in copy
 - [No information from absence](feedback_no_information_from_absence.md) — missing data stays unsaid; never infer a cause from a null
 - [No manufactured defaults](feedback_no_manufactured_defaults.md) — no unwrap_or_default / Default standing in for missing data; Option or error instead
 - [No reasoning from names](feedback_no_reasoning_from_names.md) — never argue a design from what a page/route name suggests; check what it actually does
