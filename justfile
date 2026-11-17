@@ -38,6 +38,12 @@ prod-db-setup: ssh-key-loaded
 	printf '%s\nGRANT USAGE, CREATE ON SCHEMA public TO fortropp;\n' "$admin_url" \
 		| ssh "root@$host" 'read -r url && exec docker run --rm -i -e "DATABASE_URL=$url" postgres:18 sh -c "exec psql \"\$DATABASE_URL\" -v ON_ERROR_STOP=1"'
 
+prod-rewrite-routes: ssh-key-loaded
+	#!/usr/bin/env bash
+	set -euo pipefail
+	host=$(cd infra/tofu && op run --env-file .env.tpl -- tofu output -raw deploy_host)
+	ssh "root@$host" 'cd /opt/fortropp && docker compose exec -T backend ./rewrite_routes'
+
 prod-secrets:
 	#!/usr/bin/env bash
 	set -euo pipefail

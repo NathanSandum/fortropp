@@ -5,7 +5,7 @@ name = "Starter"
 price_cents = 0
 websites = 1
 domains = 2
-page_views = 10_000
+requests = 10_000
 storage_mb = 1024
 versions_kept = 10
 
@@ -14,7 +14,7 @@ name = "Builder"
 price_cents = 700
 websites = 5
 domains = 10
-page_views = 100_000
+requests = 100_000
 storage_mb = 10240
 versions_kept = 30
 
@@ -23,6 +23,6 @@ name = "Entrepreneur"
 price_cents = 1900
 websites = 25
 domains = 50
-page_views = 1_000_000
+requests = 1_000_000
 storage_mb = 51200
 versions_kept = 100
