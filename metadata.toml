@@ -7,7 +7,7 @@ websites = 1
 domains = 2
 requests = 10_000
 storage_mb = 1024
-versions_kept = 10
+versions_per_site = 10
 
 [plans.builder]
 name = "Builder"
@@ -16,7 +16,7 @@ websites = 5
 domains = 10
 requests = 100_000
 storage_mb = 10240
-versions_kept = 30
+versions_per_site = 30
 
 [plans.entrepreneur]
 name = "Entrepreneur"
@@ -25,4 +25,4 @@ websites = 25
 domains = 50
 requests = 1_000_000
 storage_mb = 51200
-versions_kept = 100
+versions_per_site = 100
