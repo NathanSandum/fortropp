@@ -70,7 +70,7 @@ Decided plans and open work only. Post-launch work: `post_launch_todo_list.md`. 
 - **A real monthly bill, before signup opens.** Once the live Stripe account is set up, the operator account on production starts a paid plan with a real card, and its first bill on the 1st shows which emails a customer gets: ours, Stripe's receipt, and whether "Send finalised invoices to customers" adds an invoice email for automatically charged invoices (sandbox payments send none). Stripe settings to match the sandbox's: failed-payment emails off (Billing → Subscriptions and emails → Email notifications and customer management), receipts for successful payments on (Business → Customer emails).
 - **Stripe sends from `fortropp.dev`.** A custom email domain on the live Stripe account, so its receipts come from `fortropp.dev` like our own emails; Stripe's DNS records for it in OpenTofu. Set up before the real monthly bill, which checks it.
 - **Open signup.** Remove the `SIGNUP` allowlist.
-- **Mobile (launch).** The marketing pages, sign-up and sign-in, the dashboard, and the plan step with its Add Card drawer work comfortably on a phone.
+- **Mobile and smaller windows (launch).** The marketing pages, sign-up and sign-in, the dashboard, and the plan step with its Add Card drawer work comfortably on a phone, and the dashboard holds its layout in shorter and narrower desktop windows too (Chrome's "Claude is using this tab" bar shrinking the page showed distortions).
 
 ## Tests and tooling
 
