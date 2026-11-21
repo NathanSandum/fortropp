@@ -189,7 +189,7 @@ dev-logs:
 	docker compose -f infra/docker-compose.yml logs -f
 
 dev-stripe-listen:
-	stripe listen --forward-to https://localhost/api/stripe/webhook --skip-verify --events invoice.paid,invoice.payment_failed,invoice.finalization_failed
+	stripe listen --forward-to https://localhost/api/stripe/webhook --skip-verify --events invoice.paid,invoice.payment_failed,invoice.payment_action_required,invoice.finalization_failed
 
 dev-ca:
 	docker compose -f infra/docker-compose.yml exec -T caddy cat /data/caddy/pki/authorities/local/root.crt > infra/dev-ca.crt
