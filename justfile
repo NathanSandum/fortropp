@@ -205,7 +205,7 @@ pretty: backend::pretty frontend::pretty worker::pretty
 
 build: backend::build frontend::build
 
-test-up: down frontend::build
+test-up: down
 	docker compose -f infra/docker-compose.test.yml --env-file frontend/.env.test up -d --build --wait
 
 test-down:
@@ -260,9 +260,11 @@ rollback-rehearsal previous recovery="" old_ui_skip="no test has this name" open
 		--build-context site-config="$worktree/worker/site-config" \
 		--build-context metadata="$worktree" \
 		"$worktree/backend"
+	docker build -q -t "fortropp-rehearsal-frontend:{{previous}}" \
+		--file "$worktree/infra/production/frontend.Dockerfile" \
+		"$worktree"
 	ln -s "$PWD/frontend/node_modules" "$worktree/frontend/node_modules"
-	(cd "$worktree/frontend" && npm run build)
-	printf 'services:\n  caddy:\n    volumes:\n      - %s/frontend/build:/srv\n' "$worktree" > "$old_frontend"
+	printf 'services:\n  caddy:\n    image: fortropp-rehearsal-frontend:%s\n' "{{previous}}" > "$old_frontend"
 	printf 'services:\n  backend:\n    image: fortropp-rehearsal-backend:%s\n' "{{previous}}" > "$old_backend"
 	cat "$old_backend" > "$old_both"
 	cat "$old_frontend" | tail -n +2 >> "$old_both"

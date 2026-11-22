@@ -1,5 +1,12 @@
 name: fortropp-test
 
+x-healthcheck-timing: &healthcheck-timing
+  interval: 60s
+  timeout: 5s
+  retries: 3
+  start_period: 120s
+  start_interval: 1s
+
 services:
   postgres:
     image: postgres:18
@@ -11,17 +18,13 @@ services:
       - "${POSTGRES_PORT:?}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fortropp"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      <<: *healthcheck-timing
 
   redis:
     image: redis:8-alpine
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      <<: *healthcheck-timing
 
   backend:
     build:
@@ -95,9 +98,7 @@ services:
       - "${CLOUDFLARE_SAAS_PORT:?}:8080"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
+      <<: *healthcheck-timing
 
   postmark:
     build: ./test-services
@@ -112,9 +113,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
+      <<: *healthcheck-timing
 
   stripe-mock:
     image: stripe/stripe-mock:v0.206.0
@@ -140,9 +139,7 @@ services:
       - stripe-mock
     healthcheck:
       test: ["CMD", "test", "-f", "/data/caddy/certificates/local/stripe.fortropp.test/stripe.fortropp.test.crt"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
+      <<: *healthcheck-timing
 
   pdns:
     image: powerdns/pdns-auth-51:5.1.4
@@ -152,9 +149,7 @@ services:
       - "${PDNS_API_PORT:?}:8081"
     healthcheck:
       test: ["CMD", "pdns_control", "rping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      <<: *healthcheck-timing
 
   echo:
     build: ./test-services
@@ -167,9 +162,7 @@ services:
           - echo.fortropp.test
     healthcheck:
       test: ["CMD", "curl", "-skf", "https://127.0.0.1:8080/"]
-      interval: 2s
-      timeout: 5s
-      retries: 15
+      <<: *healthcheck-timing
 
   mailpit:
     image: axllent/mailpit:v1.24
@@ -177,9 +170,7 @@ services:
       - "${MAILPIT_HTTP_PORT:?}:8025"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8025/readyz"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      <<: *healthcheck-timing
 
   worker:
     build: ../worker
@@ -196,13 +187,12 @@ services:
       - "${WORKER_PORT:?}:${WORKER_PORT:?}"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:${WORKER_PORT:?}/cdn-cgi/local/explorer/api/storage/kv/namespaces"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 120s
+      <<: *healthcheck-timing
 
   caddy:
-    image: caddy:2.11.4
+    build:
+      context: ..
+      dockerfile: infra/production/frontend.Dockerfile
     environment:
       CADDY_SITE_ADDRESS: localhost
       WORKER_ADDRESS: worker:${WORKER_PORT:?}
@@ -211,13 +201,10 @@ services:
       - "${CADDY_HTTP_PORT:?}:80"
     healthcheck:
       test: ["CMD", "test", "-f", "/data/caddy/pki/authorities/local/root.crt"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
+      <<: *healthcheck-timing
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./app-routes.caddy:/etc/caddy/app-routes.caddy
-      - ../frontend/build:/srv
     depends_on:
       - backend
 
