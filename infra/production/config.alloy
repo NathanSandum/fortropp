@@ -1,0 +1,95 @@
+otelcol.receiver.otlp "backend" {
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces  = [otelcol.processor.batch.default.input]
+		metrics = [otelcol.processor.batch.default.input]
+		logs    = [otelcol.processor.batch.default.input]
+	}
+}
+
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/.*-(caddy|redis)-[0-9]+"
+		action        = "keep"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/.*-(caddy|redis)-[0-9]+"
+		target_label  = "service_name"
+	}
+}
+
+loki.source.docker "containers" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.containers.output
+	forward_to = [loki.process.mask_addresses.receiver]
+}
+
+loki.process "mask_addresses" {
+	stage.replace {
+		expression = "((?:\\d{1,3}\\.){3}\\d{1,3})"
+		replace    = "<ip>"
+	}
+
+	stage.replace {
+		expression = "((?:[0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4})"
+		replace    = "<ip>"
+	}
+
+	forward_to = [otelcol.receiver.loki.containers.receiver]
+}
+
+otelcol.receiver.loki "containers" {
+	output {
+		logs = [otelcol.processor.batch.default.input]
+	}
+}
+
+prometheus.exporter.unix "host" {
+	procfs_path = "/host/proc"
+	sysfs_path  = "/host/sys"
+	rootfs_path = "/host/root"
+}
+
+prometheus.scrape "host" {
+	targets         = prometheus.exporter.unix.host.targets
+	scrape_interval = "60s"
+	forward_to      = [otelcol.receiver.prometheus.host.receiver]
+}
+
+otelcol.receiver.prometheus "host" {
+	output {
+		metrics = [otelcol.processor.batch.default.input]
+	}
+}
+
+otelcol.processor.batch "default" {
+	output {
+		traces  = [otelcol.exporter.otlphttp.grafana_cloud.input]
+		metrics = [otelcol.exporter.otlphttp.grafana_cloud.input]
+		logs    = [otelcol.exporter.otlphttp.grafana_cloud.input]
+	}
+}
+
+otelcol.auth.basic "grafana_cloud" {
+	username = sys.env("GRAFANA_CLOUD_INSTANCE_ID")
+	password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+}
+
+otelcol.exporter.otlphttp "grafana_cloud" {
+	client {
+		endpoint = sys.env("GRAFANA_CLOUD_OTLP_ENDPOINT")
+		auth     = otelcol.auth.basic.grafana_cloud.handler
+	}
+}

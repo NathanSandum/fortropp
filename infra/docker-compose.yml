@@ -36,6 +36,7 @@ services:
     restart: unless-stopped
     network_mode: "service:worker"
     environment:
+      OTEL_SDK_DISABLED: "true"
       DATABASE_URL: postgres://fortropp:${POSTGRES_PASSWORD:?}@postgres:5432/fortropp
       REDIS_URL: redis://redis:6379
       PORT: 8080

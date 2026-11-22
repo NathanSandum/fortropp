@@ -22,6 +22,25 @@ services:
     depends_on:
       - backend
 
+  alloy:
+    image: grafana/alloy:v1.22.0
+    restart: unless-stopped
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    env_file:
+      - /etc/fortropp/alloy-secrets.env
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+      - alloy_data:/var/lib/alloy/data
+
   backend:
     image: registry.digitalocean.com/fortropp/backend:${FORTROPP_VERSION:?}
     restart: unless-stopped
@@ -59,3 +78,4 @@ volumes:
   caddy_data:
   caddy_config:
   redis_data:
+  alloy_data:

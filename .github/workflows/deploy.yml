@@ -46,18 +46,20 @@ jobs:
       - name: Write the secrets
         env:
           BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+          ALLOY_ENV: ${{ secrets.ALLOY_ENV }}
           ORIGIN_CERTIFICATE: ${{ secrets.ORIGIN_CERTIFICATE }}
           ORIGIN_PRIVATE_KEY: ${{ secrets.ORIGIN_PRIVATE_KEY }}
         run: |
           ssh "$TARGET" 'install -m 700 -d /etc/fortropp /opt/fortropp'
           printf '%s\n' "$BACKEND_ENV" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/backend-secrets.env'
+          printf '%s\n' "$ALLOY_ENV" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/alloy-secrets.env'
           printf '%s\n' "$ORIGIN_CERTIFICATE" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/origin.pem'
           printf '%s\n' "$ORIGIN_PRIVATE_KEY" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/origin-key.pem'
       - name: Copy the release
         env:
           CLOUDFLARE_RANGES: ${{ vars.CLOUDFLARE_RANGES }}
         run: |
-          scp infra/production/docker-compose.yml infra/production/backend.env "$TARGET:/opt/fortropp/"
+          scp infra/production/docker-compose.yml infra/production/backend.env infra/production/config.alloy "$TARGET:/opt/fortropp/"
           printf 'FORTROPP_VERSION=%s\nCLOUDFLARE_RANGES=%s\n' "$VERSION" "$CLOUDFLARE_RANGES" | ssh "$TARGET" 'cat > /opt/fortropp/.env'
       - name: Log in to the registry
         env:

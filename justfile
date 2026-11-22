@@ -78,13 +78,14 @@ prod-secrets:
 		exit 1
 	fi
 	printf '%s\n%s\n' "$from_op" "$from_tofu" | gh secret set BACKEND_ENV --repo "$repo"
+	op inject -i infra/production/alloy.env.tpl | gh secret set ALLOY_ENV --repo "$repo"
 	printf '%s\n' "$certificate" | gh secret set ORIGIN_CERTIFICATE --repo "$repo"
 	printf '%s\n' "$private_key" | gh secret set ORIGIN_PRIVATE_KEY --repo "$repo"
 	printf '%s' "$deploy_host" | gh secret set DEPLOY_HOST --repo "$repo"
 	printf '%s\n' "$deploy_key" | gh secret set DEPLOY_SSH_KEY --repo "$repo"
 	printf '%s\n' "$known_hosts" | gh secret set DEPLOY_KNOWN_HOSTS --repo "$repo"
 	output cloudflare_ranges | gh variable set CLOUDFLARE_RANGES --repo "$repo"
-	echo "Updated BACKEND_ENV, ORIGIN_*, DEPLOY_* and CLOUDFLARE_RANGES in $repo"
+	echo "Updated BACKEND_ENV, ALLOY_ENV, ORIGIN_*, DEPLOY_* and CLOUDFLARE_RANGES in $repo"
 
 ci-cache-secret:
 	#!/usr/bin/env bash
