@@ -2,17 +2,8 @@ resource "random_bytes" "session_key" {
   length = 64
 }
 
-resource "random_bytes" "domain_verification_key" {
-  length = 32
-}
-
 output "session_key" {
   value     = random_bytes.session_key.hex
-  sensitive = true
-}
-
-output "domain_verification_key" {
-  value     = random_bytes.domain_verification_key.hex
   sensitive = true
 }
 

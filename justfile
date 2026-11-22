@@ -56,7 +56,6 @@ prod-secrets:
 		[
 			["DATABASE_URL", "database_url"],
 			["SESSION_KEY", "session_key"],
-			["DOMAIN_VERIFICATION_KEY", "domain_verification_key"],
 			["S3_ENDPOINT", "s3_endpoint"],
 			["S3_PUBLIC_ORIGIN", "s3_endpoint"],
 			["KV_API_URL", "kv_api_url"],
