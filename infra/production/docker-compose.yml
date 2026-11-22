@@ -4,6 +4,8 @@ services:
   caddy:
     image: registry.digitalocean.com/fortropp/frontend:${FORTROPP_VERSION:?}
     restart: unless-stopped
+    environment:
+      CLOUDFLARE_RANGES: ${CLOUDFLARE_RANGES:?}
     logging:
       driver: json-file
       options:

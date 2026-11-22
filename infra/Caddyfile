@@ -2,6 +2,10 @@
 	on_demand_tls {
 		ask http://localhost:5555/
 	}
+	servers {
+		trusted_proxies static private_ranges
+		client_ip_headers CF-Connecting-IP
+	}
 }
 
 {$CADDY_SITE_ADDRESS:localhost:80} {

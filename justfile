@@ -83,7 +83,8 @@ prod-secrets:
 	printf '%s' "$deploy_host" | gh secret set DEPLOY_HOST --repo "$repo"
 	printf '%s\n' "$deploy_key" | gh secret set DEPLOY_SSH_KEY --repo "$repo"
 	printf '%s\n' "$known_hosts" | gh secret set DEPLOY_KNOWN_HOSTS --repo "$repo"
-	echo "Updated BACKEND_ENV, ORIGIN_*, DEPLOY_* in $repo"
+	output cloudflare_ranges | gh variable set CLOUDFLARE_RANGES --repo "$repo"
+	echo "Updated BACKEND_ENV, ORIGIN_*, DEPLOY_* and CLOUDFLARE_RANGES in $repo"
 
 ci-cache-secret:
 	#!/usr/bin/env bash

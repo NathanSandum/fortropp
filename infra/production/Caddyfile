@@ -1,5 +1,9 @@
 {
 	auto_https disable_redirects
+	servers {
+		trusted_proxies static {$CLOUDFLARE_RANGES}
+		client_ip_headers CF-Connecting-IP
+	}
 }
 
 fortropp.dev {

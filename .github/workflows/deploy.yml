@@ -54,9 +54,11 @@ jobs:
           printf '%s\n' "$ORIGIN_CERTIFICATE" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/origin.pem'
           printf '%s\n' "$ORIGIN_PRIVATE_KEY" | ssh "$TARGET" 'umask 077 && cat > /etc/fortropp/origin-key.pem'
       - name: Copy the release
+        env:
+          CLOUDFLARE_RANGES: ${{ vars.CLOUDFLARE_RANGES }}
         run: |
           scp infra/production/docker-compose.yml infra/production/backend.env "$TARGET:/opt/fortropp/"
-          printf 'FORTROPP_VERSION=%s\n' "$VERSION" | ssh "$TARGET" 'cat > /opt/fortropp/.env'
+          printf 'FORTROPP_VERSION=%s\nCLOUDFLARE_RANGES=%s\n' "$VERSION" "$CLOUDFLARE_RANGES" | ssh "$TARGET" 'cat > /opt/fortropp/.env'
       - name: Log in to the registry
         env:
           REGISTRY_READ_TOKEN: ${{ secrets.REGISTRY_READ_TOKEN }}

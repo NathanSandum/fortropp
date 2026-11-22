@@ -38,6 +38,15 @@ resource "digitalocean_droplet" "backend" {
   user_data  = file("${path.module}/cloud-init.yaml")
 }
 
+data "cloudflare_ip_ranges" "cloudflare" {}
+
+locals {
+  cloudflare_ranges = concat(
+    data.cloudflare_ip_ranges.cloudflare.ipv4_cidrs,
+    data.cloudflare_ip_ranges.cloudflare.ipv6_cidrs,
+  )
+}
+
 resource "digitalocean_firewall" "backend" {
   name = "fortropp-backend"
   tags = [digitalocean_tag.backend.id]
@@ -51,13 +60,13 @@ resource "digitalocean_firewall" "backend" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = local.cloudflare_ranges
   }
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = local.cloudflare_ranges
   }
 
   outbound_rule {

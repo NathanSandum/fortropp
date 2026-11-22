@@ -1,9 +1,13 @@
 handle /api/* {
-	reverse_proxy {args[0]}
+	reverse_proxy {args[0]} {
+		header_up X-Real-IP {client_ip}
+	}
 }
 
 handle /.well-known/oauth-* {
-	reverse_proxy {args[0]}
+	reverse_proxy {args[0]} {
+		header_up X-Real-IP {client_ip}
+	}
 }
 
 header /oauth/* {
