@@ -77,6 +77,7 @@ Decided plans and open work only. Post-launch work: `post_launch_todo_list.md`. 
 - **`folder_upload_stress.e2e.ts` is load-sensitive.** Revisit if it keeps failing.
 - **Dead-code checks in `just test`.** `dpdusage` for Rocq; `cargo-machete` or `cargo-udeps` for dependencies.
 - **Move the CI runner off the deprecated `forgejo-runner register`,** at the next runner bump.
+- **Retry a KV write once when the local emulator drops the connection (flake).** Under e2e load, Miniflare's KV sometimes closes a reused connection as the backend sends on it (`hyper::Error(IncompleteMessage)`), and the request fails with an incident reference. Seen once in three full runs on 2026-11-22 (`worker_routes.e2e.ts:13`, passing on rerun). Either retry a write once on that error in the KV client, or turn off connection reuse to the local emulator in test builds only.
 
 ## Cleanups
 
