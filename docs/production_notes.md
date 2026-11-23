@@ -17,7 +17,7 @@ Already settled in item 5 and built: ALIAS at the apex, CNAME below it, never A 
 
 ## 2. One TXT record or two
 
-Ours (`_fortropp-challenge.<hostname>`) proves ownership. Cloudflare for SaaS may also want its own ownership record and certificate validation.
+Ours (`_fortropp-challenge.<hostname>`) proves ownership (replaced 2026-11-22 by the label, §3). Cloudflare for SaaS may also want its own ownership record and certificate validation.
 - HTTP validation: automatic once DNS points at us, no extra record, but a certificate gap while DNS cuts over.
 - TXT pre-validation: zero-downtime migration of an already-live site, at the cost of another record.
 
@@ -46,6 +46,8 @@ Settled 2026-10-25, how registration stays consistent (replaces the first cut, w
 - A permanent Cloudflare rejection (e.g. code 1411, or the hostname already a custom hostname at another Cloudflare customer) removes the claim through the removal path and returns the reason to the user.
 - Separately, a pure reconciler (`plan(desired, actual)` → batched apply) catches drift from outside our events; only it batches. Writes in requests stay one at a time (they're rare).
 - The KV `host:` records had the same commit-then-act gap; the driver now writes and deletes them as part of each transition. Changing a redirect still writes KV right after its commit (a small KV-only gap for the reconciler). Billing (item 12, with enforced caps) is a prerequisite for going live: production before billing is private testing only. Settled 2026-10-22: during private testing, signup is closed by a backend config flag with an email allowlist (not Cloudflare Access, which would block MCP/OAuth clients); removed or opened at launch.
+
+Settled 2026-11-22, replacing "register at admission" and the umbrella, tombstone and contest bullets above: a claim's proof is its own label. Every claim starts `pending_verification`; the custom hostname is registered at Cloudflare only after the proof passes, so a pending claim costs nothing there. Subdomains prove by a CNAME chain (up to 8 hops) reaching `<label>.<edge>`; apexes prove by resolving only to `ORIGIN_IPV4`, which their pending label points at, so at most one claim per apex may be pending (`domains_one_pending_apex`). Proof is checked when the owner presses Check, never re-checked afterwards. When DNS points at another claim's label, that claim proves and the previous holder becomes `lost`; reclaiming puts it back to pending. `hostname_claims`, umbrellas, contests, `demoting` and the TXT token are removed (migration 0019).
 
 ## 4. The go-live gate and domain states
 
@@ -167,10 +169,10 @@ HTTPS-record AliasMode at an apex (added 2026-10-22): a test hostname in a Cloud
 ## Why the domain rules are shaped this way
 
 - **The threat is unverified claims:** squatting, and dangling-DNS takeover after a delete or domain change. A spoofed `Host` only gets another fortropp site's content under our address.
-- **Proof is one rule:** a TXT token at `_fortropp-challenge.<full hostname>`, as a real TXT at that exact name. Proving one name proves nothing about its parent or siblings, and a wildcard can't open anyone's gate.
-- **Subdomains are always verified, because conflict checks depend on order.** An attacker could claim `a.b.com` before anything under `b.com` exists, and go live when the owner later adds a `*.b.com` wildcard.
-- **A contest covers the whole root, not just the bare name.** An owner may only ever use `shop.a.com` plus a wildcard, so an attacker's free `promo.a.com` would otherwise never be unseated. Accepted: a bogus claim can force the holder to prove subdomains once. Remaining gap: an owner adding wildcard DNS before any fortropp claim, while an attacker already holds a name there.
-- **Tombstones never expire,** because dangling CNAMEs last for years. Passing verification still overrides them, because domains get sold.
+- **Proof is one rule:** DNS for the hostname points at that claim's own label. Labels are never reissued, so a record pointing at one label proves exactly one claim; a wildcard aimed at someone's label proves only that someone's names, and the shared edge hostname proves nothing.
+- **No tombstones or contests,** because the proof is the live DNS itself: only the domain's owner can point it at a label, and pointing it at a newcomer's label is a deliberate handover. A dangling CNAME still points at the old claim's label, which nobody else can hold.
+- **One pending claim per apex,** because every pending apex label resolves to the same origin address, so two pending claims could not tell their proofs apart.
+- **Register at Cloudflare only after proof,** so unproven claims cost nothing and can't be used to fill our hostname allowance.
 - **Hostname caps are per account, not per site,** because sites multiply and each hostname costs money at Cloudflare.
 - **Point by hostname, not A record,** so IPs can move without customers changing DNS.
 

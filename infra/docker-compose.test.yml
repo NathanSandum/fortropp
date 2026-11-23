@@ -57,7 +57,7 @@ services:
       COOKIE_SECURE: "true"
       DNS_NAMESERVER: pdns:53
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:?}
-      ORIGIN_IPV4: 192.0.2.1
+      ORIGIN_IPV4: ${ORIGIN_IPV4:?}
       ORIGIN_OVERRIDE_ROUND_SECONDS: 1
       SESSION_KEY: ${SESSION_KEY:?}
       SIGNUP: open
