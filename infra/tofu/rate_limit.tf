@@ -1,9 +1,8 @@
 resource "cloudflare_ruleset" "rate_limit" {
-  provider = cloudflare.waf
-  zone_id  = data.cloudflare_zone.app.zone_id
-  name     = "fortropp rate limits"
-  kind     = "zone"
-  phase    = "http_ratelimit"
+  zone_id = data.cloudflare_zone.app.zone_id
+  name    = "fortropp rate limits"
+  kind    = "zone"
+  phase   = "http_ratelimit"
   rules = [
     {
       ref         = "human_forms_and_authorize"

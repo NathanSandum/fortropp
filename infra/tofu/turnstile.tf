@@ -1,5 +1,4 @@
 resource "cloudflare_turnstile_widget" "app" {
-  provider   = cloudflare.turnstile
   account_id = var.cloudflare_account_id
   name       = "fortropp"
   domains    = ["fortropp.dev"]

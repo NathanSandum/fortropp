@@ -1,16 +1,13 @@
 resource "cloudflare_email_routing_dns" "app" {
-  provider = cloudflare.email_routing
-  zone_id  = data.cloudflare_zone.app.zone_id
+  zone_id = data.cloudflare_zone.app.zone_id
 }
 
 resource "cloudflare_email_routing_address" "operator" {
-  provider   = cloudflare.email_routing
   account_id = var.cloudflare_account_id
   email      = var.operator_email
 }
 
 resource "cloudflare_email_routing_address" "support_inbox" {
-  provider   = cloudflare.email_routing
   account_id = var.cloudflare_account_id
   email      = "help@fortropp.helpscoutapp.com"
 }
@@ -26,10 +23,9 @@ locals {
 resource "cloudflare_email_routing_rule" "operator" {
   for_each = local.email_forwards
 
-  provider = cloudflare.email_routing
-  zone_id  = data.cloudflare_zone.app.zone_id
-  name     = "${each.key}@fortropp.dev"
-  enabled  = true
+  zone_id = data.cloudflare_zone.app.zone_id
+  name    = "${each.key}@fortropp.dev"
+  enabled = true
   matchers = [
     {
       type  = "literal"
