@@ -82,14 +82,16 @@ otelcol.processor.batch "default" {
 	}
 }
 
-otelcol.auth.basic "grafana_cloud" {
-	username = sys.env("GRAFANA_CLOUD_INSTANCE_ID")
-	password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+otelcol.auth.headers "grafana_cloud" {
+	header {
+		key   = "Authorization"
+		value = sys.env("GRAFANA_CLOUD_OTLP_AUTHORIZATION")
+	}
 }
 
 otelcol.exporter.otlphttp "grafana_cloud" {
 	client {
 		endpoint = sys.env("GRAFANA_CLOUD_OTLP_ENDPOINT")
-		auth     = otelcol.auth.basic.grafana_cloud.handler
+		auth     = otelcol.auth.headers.grafana_cloud.handler
 	}
 }
