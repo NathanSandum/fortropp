@@ -12,7 +12,6 @@ Decided plans and open work only. Post-launch work: `post_launch_todo_list.md`. 
 ## Product
 
 - **Suggest registrars with ALIAS when someone needs a domain (idea).** Porkbun or Namecheap, possibly with referral income. Don't name Cloudflare.
-- **Marketing consent on sign-up (launch).** An opt-in on the sign-up page, starting unchecked, with the consent and when it was given stored in the database. Sending campaigns comes later.
 - **Stop recording sign-ins as activity (maybe).** They clutter the operator's own account during testing, but a sign-in history is how a user notices one that wasn't theirs; revisit once testing stops. Recorded only in `backend/src/api/auth/sign_in.rs`, message in `EventLog::signed_in`.
 - **Status while awaiting proof (to discuss).** In "Set up your domain", a domain awaiting proof (every new domain) shows its record but no status line or "Show current status" popover, which only appear once it is admitted and waiting for DNS (the popover shows Cloudflare's hint, which exists only after registration). Until Check is pressed, nothing says what the proof lookup sees.
 - **A visual presentation round before launch.** Document the user flows and work through the friction found in them. Includes Delivery's layout for first-time visitors, the page-consistency audit against Profile's pattern, how to explain `www` and bare domains, and whether a first-time tutorial page would help (maybe).

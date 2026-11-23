@@ -2,6 +2,7 @@
 
 Started 2026-10-19. Things deliberately left out of the first release; none blocks launch.
 
+- [ ] **Marketing emails.** Decided 2026-11-23: consent is `users.marketing_consent_at` (null means none), given at sign-up or in Account settings. Every marketing email carries a working one-click unsubscribe link that clears it, as the sign-up checkbox promises.
 - [ ] **Domain redirects answer 307 instead of 301.** Decided 2026-11-23: so a changed redirect takes effect at once, since browsers keep a 301 indefinitely; a per-redirect permanent option only if users ask. Touches the worker, its Rocq model and the e2e checks (`expectRedirect`).
 - [ ] **A way out for a squatted apex.** Decided 2026-11-22: a pending claim holds an apex's one pending slot for as long as it stays pending, at no cost to us. If squatting becomes a problem, add an expiry.
 - [ ] **Routes shaped around the frontend.** Moved from launch 2026-11-22: review the interface between frontend and backend so the backend has a route for each page and typical user flow, bundling what that page or flow needs into one call. The finer-grained routes stay, for less predictable use and for development flexibility.
